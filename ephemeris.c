@@ -1,5 +1,6 @@
 #include <math.h>
 #include "rtk.h"
+#include "main.h"
 
 #define STD_BRDCCLK 30.0          /* error of broadcast clock (m) */
 
@@ -75,12 +76,18 @@ void eph2pos(gtime_t time, const eph_t *eph,double *rs,double *dts,double *var)
 	double uk,rk,ik,e=eph->e,xk,yk;
 	tk=timediff(time,eph->toe);
 	Mk=eph->M0+(sqrt(MUY/(eph->A*eph->A*eph->A))+eph->deln)*tk;
+			
+			
 	for (Ek=Mk,E=0.0;fabs(Ek-E)>1e-14;)//newton method
 	{
 		E=Ek;
 		Ek-=(Ek-e*sin(Ek)-Mk)/(1.0-e*cos(Ek));
 	}
+
+
+	//start=TIM2->CNT;	
 	sinEk=sin(Ek);
+	//SendIntStr(TIM2->CNT-start);
 	cosEk=cos(Ek);
 	phik=atan2(sqrt(1-e*e)*sinEk,cosEk-e)+eph->omg;
 	sin2p=sin(2.0*phik);
@@ -112,7 +119,9 @@ static int ephpos(gtime_t time, gtime_t teph, int sat, const nav_t *nav,
     int i;
     *svh=-1;
     if (!(eph=seleph(teph,sat,iode,nav,msg))) return 0;
-    eph2pos(time,eph,rs,dts,var);
+    //start=TIM2->CNT;
+		eph2pos(time,eph,rs,dts,var);
+		//SendIntStr(TIM2->CNT-start);
     time=timeadd(time,tt);
     eph2pos(time,eph,rst,dtst,var);
     *svh=eph->svh;
@@ -190,12 +199,15 @@ void satposs(gtime_t teph,const obsd_t *obs,int n,const nav_t *nav,
       continue;
     }
 		time[i]=timeadd(time[i],-dt);
-
+		//start = TIM2->CNT;
 		/* satellite position and clock at transmission time */
 		if (!satpos(time[i],teph,obs[i].sat,nav,rs+i*6,dts+i*2,var+i,
                     svh+i,msg)) {
-      continue;
+
+				continue;
     }
+		//if (i==0)
+		//		SendIntStr(TIM2->CNT-start);
 		//*msg += sprintf(*msg,"satpos");								
 		//if no precise clock available, use broadcast clock instead
 		if (dts[i*2]==0.0)

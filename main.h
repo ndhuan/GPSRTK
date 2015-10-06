@@ -45,6 +45,8 @@ typedef enum{
 	PAYLOAD
 }STAGE;
 
+extern uint32_t t,start;
+
 extern void SendInt(int num);
 extern void SendIntStr(int num);
 extern void SendStr(const char* str);

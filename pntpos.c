@@ -226,7 +226,7 @@ static int estpos(const obsd_t *obs, const nav_t *nav,int n, const int* svh,doub
 //		for (j=0;j<nv;j++)	
 //		if (i==1)
 //			msg+=sprintf(msg,"H:%f %f %f v:%f\n",H[0],H[1],H[2],v[0]);			
-		
+		//start = TIM2->CNT;
 		if (lsq(H,v,4,nv,dx,Q))
 		{
 			*msg += sprintf(*msg,"lsq error\n");
@@ -234,6 +234,9 @@ static int estpos(const obsd_t *obs, const nav_t *nav,int n, const int* svh,doub
 //			(*msg) += sizeof("lsq error\n");
 			return -1;
 		}
+		//if(i==0)
+		//	SendIntStr(TIM2->CNT-start);
+		
 		for (j=0;j<4;j++)
 		{
 			x[j]+=dx[j];
@@ -309,8 +312,12 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol,
 	//sat positions, vels, clocks (rs[i]={0.0,0.0,0.0} if ephemeris is unavailable)
 	satposs(sol->time,obs,n,nav,rs,dts,var_sat,svh,msg);
 	
-	i = estpos(obs,nav,n,svh,rs,dts,resp,var_sat,azel_,vsat,opt,sol,msg);
 
+	
+	i = estpos(obs,nav,n,svh,rs,dts,resp,var_sat,azel_,vsat,opt,sol,msg);
+	
+	//SendIntStr(HAL_GetTick()-start);
+	
 	free(rs);free(dts);free(var_sat);free(azel_);free(resp);	
 	return i;
 }

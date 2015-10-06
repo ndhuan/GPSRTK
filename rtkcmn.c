@@ -4,6 +4,7 @@
 #include <cstring>
 #include <stdio.h>
 #include "rtk.h"
+#include "main.h"
 
 #define HOME_POS
 //#define KARATE_POS
@@ -11,9 +12,9 @@
 //KARATE 10.774332000,106.658716000,13.2000
 #ifdef HOME_POS
 const prcopt_t default_opt={ /* defaults processing options */
-    PMODE_SINGLE,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
-    15.0*D2R,           /* elmin*/
-		{{0,0},{0.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
+    PMODE_KINEMA,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
+    5.0*D2R,           /* elmin*/
+		{{1,1},{30.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
     0,ARMODE_FIXHOLD,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
     IONOOPT_BRDC,TROPOPT_SAAS,0,0,                    /* estion,esttrop,dynamics,tidecorr */
     1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
@@ -361,8 +362,9 @@ extern int matinv(double *A, int n)
 {
     double d,*B;
     int i,j,*indx;
-    
+    //start=TIM2->CNT;
     indx=imat(n,1); B=mat(n,n); 
+		//SendIntStr(TIM2->CNT-start);
 		if (!indx || !B)
 			return -1;
 		matcpy(B,A,n,n);
@@ -414,11 +416,13 @@ extern int lsq(const double *A,const double *y,int n, int m, double *x, double *
 	if (m<n) return -2;
 	matmul("NN",n,1,m,1.0,A,y,0.0,Ay);
 	matmul("NT",n,n,m,1.0,A,A,0.0,Q);
+	//start = TIM2->CNT;
 	if (matinv(Q,n))
 	{
 		free(Ay);
 		return -3;
 	}
+	//SendIntStr(TIM2->CNT-start);
 	matmul("NN",n,1,n,1.0,Q,Ay,0.0,x);
 	free(Ay);
 	return 0;

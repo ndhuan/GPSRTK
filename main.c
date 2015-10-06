@@ -23,7 +23,7 @@ void SendStr(const char* str);
 void SendIntStr(int num);
 
 #ifdef TIME_MEASURE
-static uint32_t t,start;
+uint32_t t=0,start=0;
 #endif
 
 void SystemClockConfig()
@@ -77,6 +77,17 @@ void ConfigLED()
 }
 void ConfigTimer()
 {		
+/*
+	TimerHandle.Instance = TIM2;
+	TimerHandle.Init.Prescaler = (uint32_t)((SystemCoreClock/2)/1000000-1);
+	TimerHandle.Init.Period = 0xffffffff;
+	TimerHandle.Init.CounterMode = TIM_COUNTERMODE_UP;
+	TimerHandle.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+
+	__TIM2_CLK_ENABLE();
+	HAL_TIM_Base_Init(&TimerHandle);
+	HAL_TIM_Base_Start(&TimerHandle);
+*/
 	TimerHandle.Instance = TIM3;
 	TimerHandle.Init.Prescaler = (uint32_t)((SystemCoreClock/2)/10000-1);
 	TimerHandle.Init.Period = 10000/TIMER_FREQ_HZ-1;
@@ -137,7 +148,7 @@ void ConfigUART(int baseFormat)
 	HAL_UART_Init(&UartRFHandle);	
 	
 	UartResultHandle.Instance        = UART_RESULT;
-  UartResultHandle.Init.BaudRate   = 256000;
+  UartResultHandle.Init.BaudRate   = 230400;
   UartResultHandle.Init.WordLength = UART_WORDLENGTH_8B;
   UartResultHandle.Init.StopBits   = UART_STOPBITS_1;
   UartResultHandle.Init.Parity     = UART_PARITY_NONE;
@@ -295,9 +306,10 @@ int main()
 
 	
 //	test();
-	
+
 	while(1)
-	{		
+	{
+		
 		if (flagTimeout)
 		{
 			int index,temp;
