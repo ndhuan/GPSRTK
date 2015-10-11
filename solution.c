@@ -17,6 +17,7 @@ extern void outsol(char* res, const sol_t *sol, const double *rb)
 	double ep[6],pos[3],Qecef[9],Qenu[9];
 #ifdef SOLF_ENU
 	double e[3],enu[3],rr[3],eQ[9];
+	int i=0;
 #endif	
 	
 	time=sol->time;
@@ -40,7 +41,7 @@ extern void outsol(char* res, const sol_t *sol, const double *rb)
 	sqvar(Qenu[1]),sqvar(Qenu[2]),sqvar(Qenu[5]),
 	sol->age,sol->ratio);
 #elif defined SOLF_ENU
-	ecef2pos(sol->rb,pos);
+	ecef2pos(rb,pos);
 	Qecef[0]=sol->qr[0];//xx
 	Qecef[4]=sol->qr[1];//yy
 	Qecef[8]=sol->qr[2];//zz
@@ -57,7 +58,7 @@ extern void outsol(char* res, const sol_t *sol, const double *rb)
 	res+=sprintf(res,"%04.0f/%02.0f/%02.0f %02.0f:%02.0f:%06.3f %14.4f %14.4f %14.4f %3d %3d %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %6.2f %6.1f",
 	ep[0],ep[1],ep[2],ep[3],ep[4],ep[5],//time yy/mm/dd hh:mm:ss.ssss
 	enu[0],enu[1],enu[2],
-	sol->state,sol->ns,
+	sol->stat,sol->ns,
 	SQRT(Qenu[4]),SQRT(Qenu[0]),SQRT(Qenu[8]),
 	sqvar(Qenu[1]),sqvar(Qenu[2]),sqvar(Qenu[5]),
 	sol->age,sol->ratio);

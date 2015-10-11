@@ -13,9 +13,9 @@
 #ifdef HOME_POS
 const prcopt_t default_opt={ /* defaults processing options */
     PMODE_KINEMA,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
-    5.0*D2R,           /* elmin*/
-		{{1,1},{30.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
-    0,ARMODE_FIXHOLD,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
+    15.0*D2R,           /* elmin*/
+		{{0,0},{30.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
+    0,ARMODE_CONT,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
     IONOOPT_BRDC,TROPOPT_SAAS,0,0,                    /* estion,esttrop,dynamics,tidecorr */
     1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
     0,0,                        /* rovpos,refpos */
@@ -27,7 +27,8 @@ const prcopt_t default_opt={ /* defaults processing options */
     {3.0,0.9999,0.20},          /* thresar */
     0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
     30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
-    {0},{0},{10.780175707,106.660899381,31.5523}                /* baseline,ru,rb */
+//    {0},{0},{10.780175707,106.660899381,31.5523}                /* baseline,ru,rb */
+		 {0},{0},{10.772931,106.659753,15.330}
 //    {"",""},                    /* anttype */
 //    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
 };
@@ -37,7 +38,7 @@ const prcopt_t default_opt={ /* defaults processing options */
     PMODE_KINEMA,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
     15.0*D2R,           /* elmin*/
 		{{0,0},{0.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
-    0,ARMODE_FIXHOLD,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
+    0,ARMODE_CONT,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
     IONOOPT_BRDC,TROPOPT_SAAS,0,0,                    /* estion,esttrop,dynamics,tidecorr */
     1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
     0,0,                        /* rovpos,refpos */
