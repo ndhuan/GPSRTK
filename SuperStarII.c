@@ -115,7 +115,7 @@ Error decode_ss2eph(raw_t* raw)
 	if (eph.iode == raw->nav.eph[sat].iode)
 		return UNCHANGE;
 	eph.sat = sat+1;
-
+	eph.ttr=raw->time;
 	raw->nav.eph[sat]=eph;
 	raw->ephsat = sat+1;
 //	return NO_ERROR;

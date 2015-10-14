@@ -215,6 +215,7 @@ static Error decode_ephem(int sat, raw_t *raw)
     
   eph.sat=sat;
 	//SendIntStr(sat);
+	//eph.ttr = raw->time;
   raw->nav.eph[sat-1]=eph;
   raw->ephsat=sat;
   return EPHEMERIS;
@@ -282,9 +283,7 @@ Error decode_trksfrbx(raw_t *raw)
         return EPH_ERROR;
 		}
 
-    return decode_nav(raw,sat,13);
- 
-    
+    return decode_nav(raw,sat,13);    
 }
 /* checksum ------------------------------------------------------------------*/
 static int checksum(unsigned char *buff, int len)

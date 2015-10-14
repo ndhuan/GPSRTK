@@ -122,6 +122,7 @@ Error decode_subfrm3(const uint8_t* buff,eph_t *eph)
   eph->toe=gpst2time(eph->week,eph->toes);
   eph->toc=gpst2time(eph->week,toc);
   eph->ttr=gpst2time(eph->week,tow);
+
 	return NO_ERROR2;
 }
 ///* decode gps navigation data subframe 4 -------------------------------------*/

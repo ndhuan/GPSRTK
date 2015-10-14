@@ -88,8 +88,15 @@
 #define norm2(x) sqrt(x[0]*x[0]+x[1]*x[1])
 #define norm3(x) sqrt(x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
 
-#define PMODE_SINGLE 0
+#define PMODE_SINGLE 0                  /* positioning mode: single */
+#define PMODE_DGPS   1                  /* positioning mode: DGPS/DGNSS */
 #define PMODE_KINEMA 2                  /* positioning mode: kinematic */
+#define PMODE_STATIC 3                  /* positioning mode: static */
+#define PMODE_MOVEB  4                  /* positioning mode: moving-base */
+#define PMODE_FIXED  5                  /* positioning mode: fixed */
+#define PMODE_PPP_KINEMA 6              /* positioning mode: PPP-kinemaric */
+#define PMODE_PPP_STATIC 7              /* positioning mode: PPP-static */
+#define PMODE_PPP_FIXED 8               /* positioning mode: PPP-fixed */
 
 #define SOL_TYPE_BACKWARD 0
 #define SOL_TYPE_FORWARD 1
@@ -118,6 +125,8 @@
 
 #define EFACT_GPS   1.0                 /* error factor: GPS */
 #define EFACT_GLO   1.5                 /* error factor: GLONASS */
+
+#define NFREQGLO    2                   /* number of carrier frequencies of GLONASS */
 
 #define SYS_NONE    0x00                /* navigation system: none */
 #define SYS_GPS     0x01                /* navigation system: GPS */

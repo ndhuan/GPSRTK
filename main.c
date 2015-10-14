@@ -314,6 +314,8 @@ int main()
 		{
 			int index,temp;
 			flagTimeout=0;
+			//SendIntStr(UartGPSHandle.Instance->SR);
+			//SendIntStr(UartRFHandle.Instance->SR);
 			for (index=0;index<2;index++)
 			{
 				if (index==0)

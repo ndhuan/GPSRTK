@@ -8,14 +8,15 @@
 
 #define HOME_POS
 //#define KARATE_POS
+//#define A5_POS
 //HOME_POS 10.780175707,106.660899381,31.5523
 //KARATE 10.774332000,106.658716000,13.2000
 #ifdef HOME_POS
 const prcopt_t default_opt={ /* defaults processing options */
     PMODE_KINEMA,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
     15.0*D2R,           /* elmin*/
-		{{0,0},{30.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
-    0,ARMODE_CONT,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
+		{{0,0},{0.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
+    0,ARMODE_FIXHOLD,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
     IONOOPT_BRDC,TROPOPT_SAAS,0,0,                    /* estion,esttrop,dynamics,tidecorr */
     1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
     0,0,                        /* rovpos,refpos */
@@ -27,8 +28,32 @@ const prcopt_t default_opt={ /* defaults processing options */
     {3.0,0.9999,0.20},          /* thresar */
     0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
     30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
-//    {0},{0},{10.780175707,106.660899381,31.5523}                /* baseline,ru,rb */
-		 {0},{0},{10.772931,106.659753,15.330}
+    {0},{0},{10.780175707,106.660899381,31.5523}                /* baseline,ru,rb */
+
+//    {"",""},                    /* anttype */
+//    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
+};
+#endif
+#ifdef A5_POS
+const prcopt_t default_opt={ /* defaults processing options */
+    PMODE_KINEMA,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
+    15.0*D2R,           /* elmin*/
+		{{0,0},{0.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
+    0,ARMODE_FIXHOLD,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
+    IONOOPT_BRDC,TROPOPT_SAAS,0,0,                    /* estion,esttrop,dynamics,tidecorr */
+    1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
+    0,0,                        /* rovpos,refpos */
+    100.0,              /* eratio[] */
+    {100.0,0.003,0.003,0.0,1.0}, /* err[] */
+    {30.0,0.03,0.3},            /* std[] */
+    {1E-4,1E-3,1E-4,1E-1,1E-2}, /* prn[] */
+    5E-12,                      /* sclkstab */
+    {3.0,0.9999,0.20},          /* thresar */
+    0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
+    30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
+                 /* baseline,ru,rb */
+		 {0},{0},{10.772931,106.659753,15.330}//san A5
+
 //    {"",""},                    /* anttype */
 //    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
 };
@@ -38,7 +63,7 @@ const prcopt_t default_opt={ /* defaults processing options */
     PMODE_KINEMA,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
     15.0*D2R,           /* elmin*/
 		{{0,0},{0.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
-    0,ARMODE_CONT,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
+    0,ARMODE_FIXHOLD,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
     IONOOPT_BRDC,TROPOPT_SAAS,0,0,                    /* estion,esttrop,dynamics,tidecorr */
     1,0,0,0,0,                  /* niter,codesmooth,intpref,sbascorr,sbassatsel */
     0,0,                        /* rovpos,refpos */
@@ -860,6 +885,7 @@ static int filter_(const double *x, const double *P, const double *H,
     free(f); free(Q); free(K); free(I);
     return info;
 }
+//0:ok, !0:not ok
 extern int filter(double *x, double *P, const double *H, const double *v,
                   const double *R, int n, int m)
 {

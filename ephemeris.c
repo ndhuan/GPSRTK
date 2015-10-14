@@ -187,7 +187,7 @@ void satposs(gtime_t teph,const obsd_t *obs,int n,const nav_t *nav,
 		for (j=0;j<6;j++) rs[j+i*6]=0.0;
 		for (j=0;j<2;j++) dts[j+i*2]=0.0;
 		var[i]=0.0;svh[i]=0.0;
-		if (obs[i].P<=0.0)
+		if (obs[i].P==0.0)
 		{			
 			continue;
 		}
@@ -212,7 +212,9 @@ void satposs(gtime_t teph,const obsd_t *obs,int n,const nav_t *nav,
 		//if no precise clock available, use broadcast clock instead
 		if (dts[i*2]==0.0)
 		{
-			dts[i*2]=dt;
+      if (!ephclk(time[i],teph,obs[i].sat,nav,dts+i*2,msg)) 
+				continue;
+      dts[1+i*2]=0.0;
 			*var=SQR(STD_BRDCCLK);
 		}
 	}

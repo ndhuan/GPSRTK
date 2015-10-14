@@ -6,7 +6,7 @@
 #define VAR_HOLDAMB 0.001    /* constraint to hold ambiguity (cycle^2) */
 
 #define VAR_POS     SQR(30.0) /* initial variance of receiver pos (m^2) */
-
+/*
 #define NF(opt)     1
 #define NP(opt)     ((opt)->dynamics==0?3:9)//3
 #define NI(opt)     0 //(broadcasr model or klobuchar)
@@ -15,9 +15,19 @@
 #define NB(opt)     32//kinematic mode=>32*1=32
 #define NR(opt)     (NP(opt)+NI(opt)+NT(opt)+NL(opt))//3
 #define NX(opt)     (NR(opt)+NB(opt))
+*/
+#define NF(opt)     ((opt)->ionoopt==IONOOPT_IFLC?1:(opt)->nf)
+#define NP(opt)     ((opt)->dynamics==0?3:9)
+#define NI(opt)     ((opt)->ionoopt!=IONOOPT_EST?0:MAX_SAT)
+#define NT(opt)     ((opt)->tropopt<TROPOPT_EST?0:((opt)->tropopt<TROPOPT_ESTG?2:6))
+#define NL(opt)     ((opt)->glomodear!=2?0:NFREQGLO)
+#define NB(opt)     ((opt)->mode<=PMODE_DGPS?0:MAX_SAT*NF(opt))
+#define NR(opt)     (NP(opt)+NI(opt)+NT(opt)+NL(opt))
+#define NX(opt)     (NR(opt)+NB(opt))
 
 #define IB(s,f,opt) (NR(opt)+MAX_SAT*(f)+(s)-1) /* phase bias (s:satno,f:freq) */
 #define NITER 1
+
 void rtkinit(rtk_t *rtk,const prcopt_t *opt)
 {
 	gtime_t time0={0};
@@ -119,7 +129,7 @@ static int zdres(int base, const obsd_t *obs, int n, const double *rs,
                  double *e, double *azel)
 {
 	double r,rr_[3],pos[3];
-	double zhd, zazel[]={0.0,90.0*D2R};
+	double zhd, zazel[]={0.0,90.0*D2R};//tai sao init zazel = {0,90}
 	int i;
 	
 	for (i=0;i<2*n;i++) y[i]=0.0;
@@ -127,7 +137,7 @@ static int zdres(int base, const obsd_t *obs, int n, const double *rs,
 	for (i=0;i<3;i++) rr_[i]=rr[i];
 	ecef2pos(rr_,pos);
 
-																						//tai sao zazel = {0,90}
+																						
 	for (i=0;i<n;i++)
 	{
 		if ((r=geodist(rs+i*6,rr_,e+i*3))<=0.0) continue;
@@ -180,9 +190,9 @@ static void udpos(rtk_t *rtk, double tt)
  //   double *F,*FP,*xp,pos[3],Q[9]={0},Qv[9],var=0.0;
     int i;
     /* initialize position for first epoch */
- //   if (sos3(rtk->x)<=0.0) {
- //       for (i=0;i<3;i++) initx(rtk,rtk->sol.rr[i],VAR_POS,i);
- //   }
+    if (sos3(rtk->x)<=0.0) {
+        for (i=0;i<3;i++) initx(rtk,rtk->sol.rr[i],VAR_POS,i);
+    }
     /* kinmatic mode without dynamics */
     for (i=0;i<3;i++) initx(rtk,rtk->sol.rr[i],VAR_POS,i);
 }
@@ -249,6 +259,18 @@ static void udbias(rtk_t *rtk, double tt, const obsd_t *obs, const int *sat,
 					rtk->ssat[i-1].lock=-rtk->opt.minlock;
 			}
 	}
+	/* reset phase-bias if instantaneous AR or expire obs outage counter */
+  for (i=1;i<=MAX_SAT;i++) {
+            
+		reset=++rtk->ssat[i-1].outc>(unsigned int)rtk->opt.maxout;
+							
+		if (reset&&rtk->x[IB(i,0,&rtk->opt)]!=0.0) {
+			initx(rtk,0.0,0.0,IB(i,0,&rtk->opt));
+		}
+		if (rtk->opt.modear!=ARMODE_INST&&reset) {
+			rtk->ssat[i-1].lock=-rtk->opt.minlock;
+		}
+  }
 	/* reset phase-bias if detecting cycle slip */
 	for (i=0;i<ns;i++) {
 			j=IB(sat[i],0,&rtk->opt);
@@ -517,7 +539,8 @@ static int ddmat(rtk_t *rtk, double *D)
     
 		for (f=0,k=na;f<nf;f++,k+=MAX_SAT) {
 				for (i=k;i<k+MAX_SAT;i++) {
-						if (rtk->x[i]==0.0) continue;
+						if ((rtk->x[i]==0.0)||(!rtk->ssat[i-k].vsat)) 
+								continue;
 						
 						if (rtk->ssat[i-k].lock>0&&!(rtk->ssat[i-k].slip&2)&&
 								rtk->ssat[i-k].azel[1]>=rtk->opt.elmaskar) {
@@ -527,9 +550,12 @@ static int ddmat(rtk_t *rtk, double *D)
 						else rtk->ssat[i-k].fix=1;
 				}
 				for (j=k;j<k+MAX_SAT;j++) {
-						if (i==j||rtk->x[j]==0.0) continue;
+						if (i==j||rtk->x[j]==0.0||
+                    !rtk->ssat[j-k].vsat) 
+								continue;
 						
 						if (rtk->ssat[j-k].lock>0&&!(rtk->ssat[j-k].slip&2)&&
+								rtk->ssat[i-k].vsat&&
 								rtk->ssat[j-k].azel[1]>=rtk->opt.elmaskar) {
 								D[i+(na+nb)*nx]= 1.0;
 								D[j+(na+nb)*nx]=-1.0;
@@ -649,8 +675,6 @@ static void holdamb(rtk_t *rtk, const double *xa,char **msg)
     
     v=mat(nb,1); H=zeros(nb,rtk->nx);
     
-    
-        
         for (n=i=0;i<MAX_SAT;i++) {
             if (rtk->ssat[i].fix!=2||
                 rtk->ssat[i].azel[1]<rtk->opt.elmaskhold) continue;
@@ -679,6 +703,7 @@ static void holdamb(rtk_t *rtk, const double *xa,char **msg)
     }
     free(v); free(H);
 }
+//0:ok, !0: not ok
 static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
                   const nav_t *nav,char **msg)
 {
@@ -716,6 +741,7 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 	}//*********************88
 	/* select common satellites between rover and base-station */
   if ((ns=selsat(obs,azel,nu,nr,opt,sat,iu,ir,msg))<=0) {//check!!!!!!!!!!!!!!!11
+		
     (*msg)+=sprintf(*msg,"no common satellite\n");
     free(rs); free(dts); free(var); free(y); free(e); free(azel);
     return -1;
@@ -768,7 +794,8 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 		nv=ddres(rtk,nav,dt,xp,Pp,sat,y,e,azel,iu,ir,ns,v,NULL,R,vflg,msg);
 
 		/* validation of float solution */
-		if (!valpos(rtk,v,R,vflg,nv,4.0,msg)) {//0:ok,!0:not ok 
+		if (!valpos(rtk,v,R,vflg,nv,4.0,msg)) {//0:ok,!0:not ok
+			
 
 			/* update state and covariance matrix */
 			matcpy(rtk->x,xp,rtk->nx,1);
