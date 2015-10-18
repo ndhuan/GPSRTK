@@ -3,18 +3,18 @@
 
 #define TIMER_FREQ_HZ 5
 
-TIM_HandleTypeDef TimerHandle;
-UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle;
+TIM_HandleTypeDef TimerHandle;// __attribute__((section("CCM_DATA")));
+UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle;// __attribute__((section("CCM_DATA")));
 
-TIM_IC_InitTypeDef sConfig;
-TIM_SlaveConfigTypeDef sSlaveConfig;
+TIM_IC_InitTypeDef sConfig;// __attribute__((section("CCM_DATA")));
+TIM_SlaveConfigTypeDef sSlaveConfig;// __attribute__((section("CCM_DATA")));
 
 //static rtksvr_t svr __attribute__((section(".noinit")));
 static char result[SOL_MSG_LEN] __attribute__((section("IRAM1")));
 static rtksvr_t svr __attribute__((section("IRAM1")));
-static obsd_t obsd[2*MAX_SAT];// __attribute__((section(".noinit")));
+static obsd_t obsd[2*MAX_SAT];// __attribute__((section("IRAM2")));
 static volatile bool flagTimeout=0;
-static int fobs[2];
+static int fobs[2];// __attribute__((section("CCM_DATA")));
 static volatile Error RError=INCOMPLETE;//rover data error
 static volatile Error BError=INCOMPLETE;//base data error
 

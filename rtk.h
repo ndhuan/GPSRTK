@@ -54,7 +54,7 @@
 #define P2_55       2.775557561562891E-17 /* 2^-55 */
 
 #define MAX_SAT 32
-#define MAX_RAW_LEN 4000
+#define MAX_RAW_LEN 3000
 #define MAX_ERRMSG 500
 #define MAX_OBS 24//max observation per epoch (rover+base)
 #define MAXDTOE 7200.0
@@ -483,7 +483,7 @@ typedef struct{
 	int neb;//bytes in error msg buffer
 	char errbuf[MAX_ERRMSG];//error msg buffer
 	int errLen;
-	prcopt_t opt;
+	const prcopt_t *opt;
 }rtk_t;
 typedef struct {        /* stream type */
     int type;           /* type (STR_???) */

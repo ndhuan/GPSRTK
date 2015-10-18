@@ -169,18 +169,22 @@ extern int lambda(int n, int m, const double *a, const double *Q, double *f,
     L=zeros(n,n); D=mat(n,1); Z=eye(n); z=mat(n,1),E=mat(n,m);
     
     /* LD factorization */
-    if (!(info=LD(n,Q,L,D))) {
+    if (!(LD(n,Q,L,D))) {
         
         /* lambda reduction */
         reduction(n,L,D,Z);
         matmul("TN",n,1,n,1.0,Z,a,0.0,z); /* z=Z'*a */
         
         /* mlambda search */
-        if (!(info=search(n,m,L,D,z,E,s))) {
+        if (!(search(n,m,L,D,z,E,s))) {
             
             info=solve("T",Z,E,n,m,f); /* F=Z'\E */
         }
+				else
+					info = -2;
     }
+		else
+			info=-3;
     free(L); free(D); free(Z); free(z); free(E);
     return info;
 }

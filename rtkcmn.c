@@ -394,10 +394,10 @@ extern int matinv(double *A, int n)
 		if (!indx || !B)
 		{
 			free(indx);free(B);
-			return -1;
+			return -9;
 		}
 		matcpy(B,A,n,n);
-    if (ludcmp(B,n,indx,&d)) {free(indx); free(B); return -2;}
+    if (ludcmp(B,n,indx,&d)) {free(indx); free(B); return -8;}
     for (j=0;j<n;j++) {
         for (i=0;i<n;i++) A[i+j*n]=0.0; A[j+j*n]=1.0;
         lubksb(B,n,indx,A+j*n);
@@ -422,7 +422,7 @@ extern int solve(const char *tr, const double *A, const double *Y, int n,
     double *B=mat(n,n);
     int info;
     if (!B)
-			return -1;
+			return -10;
     matcpy(B,A,n,n);
     if (!(info=matinv(B,n))) matmul(tr[0]=='N'?"NN":"TN",n,m,n,1.0,B,Y,0.0,X);
     free(B);

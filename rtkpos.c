@@ -150,34 +150,34 @@ static void udbias(rtk_t *rtk, double tt, const obsd_t *obs, const int *sat,
 	/* reset phase-bias if expire obs outage counter */
 	for (i=1;i<=MAX_SAT;i++) {
 			
-			reset=++rtk->ssat[i-1].outc>(unsigned int)rtk->opt.maxout;
-			if (reset&&rtk->x[IB(i,0,&rtk->opt)]!=0.0) {
-					initx(rtk,0.0,0.0,IB(i,0,&rtk->opt));
+			reset=++rtk->ssat[i-1].outc>(unsigned int)rtk->opt->maxout;
+			if (reset&&rtk->x[IB(i,0,rtk->opt)]!=0.0) {
+					initx(rtk,0.0,0.0,IB(i,0,rtk->opt));
 			}
 			if (reset) {
-					rtk->ssat[i-1].lock=-rtk->opt.minlock;
+					rtk->ssat[i-1].lock=-rtk->opt->minlock;
 			}
 	}
 	/* reset phase-bias if instantaneous AR or expire obs outage counter */
   for (i=1;i<=MAX_SAT;i++) {
             
-		reset=++rtk->ssat[i-1].outc>(unsigned int)rtk->opt.maxout;
+		reset=++rtk->ssat[i-1].outc>(unsigned int)rtk->opt->maxout;
 							
-		if (reset&&rtk->x[IB(i,0,&rtk->opt)]!=0.0) {
-			initx(rtk,0.0,0.0,IB(i,0,&rtk->opt));
+		if (reset&&rtk->x[IB(i,0,rtk->opt)]!=0.0) {
+			initx(rtk,0.0,0.0,IB(i,0,rtk->opt));
 		}
-		if (rtk->opt.modear!=ARMODE_INST&&reset) {
-			rtk->ssat[i-1].lock=-rtk->opt.minlock;
+		if (rtk->opt->modear!=ARMODE_INST&&reset) {
+			rtk->ssat[i-1].lock=-rtk->opt->minlock;
 		}
   }
 	/* reset phase-bias if detecting cycle slip */
 	for (i=0;i<ns;i++) {
-			j=IB(sat[i],0,&rtk->opt);
-			rtk->P[j+j*rtk->nx]+=rtk->opt.prn[0]*rtk->opt.prn[0]*tt;
+			j=IB(sat[i],0,rtk->opt);
+			rtk->P[j+j*rtk->nx]+=rtk->opt->prn[0]*rtk->opt->prn[0]*tt;
 			slip=rtk->ssat[sat[i]-1].slip;
 			if (!(slip&1)) continue;
 			rtk->x[j]=0.0;
-			rtk->ssat[sat[i]-1].lock=-rtk->opt.minlock;
+			rtk->ssat[sat[i]-1].lock=-rtk->opt->minlock;
 	}
 	bias=zeros(ns,1);
         
@@ -191,8 +191,8 @@ static void udbias(rtk_t *rtk, double tt, const obsd_t *obs, const int *sat,
 			
 			bias[i]=cp-pr*FREQ1/CLIGHT;
 	
-			if (rtk->x[IB(sat[i],0,&rtk->opt)]!=0.0) {
-					offset+=bias[i]-rtk->x[IB(sat[i],0,&rtk->opt)];
+			if (rtk->x[IB(sat[i],0,rtk->opt)]!=0.0) {
+					offset+=bias[i]-rtk->x[IB(sat[i],0,rtk->opt)];
 					j++;
 			}
 	}
@@ -201,15 +201,15 @@ static void udbias(rtk_t *rtk, double tt, const obsd_t *obs, const int *sat,
 	{
 		for (i=1;i<=MAX_SAT;i++) 
 		{
-			if (rtk->x[IB(i,0,&rtk->opt)]!=0.0) 
-				rtk->x[IB(i,0,&rtk->opt)]+=offset/j;
+			if (rtk->x[IB(i,0,rtk->opt)]!=0.0) 
+				rtk->x[IB(i,0,rtk->opt)]+=offset/j;
 		}
 	}
 	/* set initial states of phase-bias */
 	for (i=0;i<ns;i++) 
 	{
-			if (bias[i]==0.0||rtk->x[IB(sat[i],0,&rtk->opt)]!=0.0) continue;
-			initx(rtk,bias[i],SQR(rtk->opt.std[0]),IB(sat[i],0,&rtk->opt));
+			if (bias[i]==0.0||rtk->x[IB(sat[i],0,rtk->opt)]!=0.0) continue;
+			initx(rtk,bias[i],SQR(rtk->opt->std[0]),IB(sat[i],0,rtk->opt));
 	}
 	free(bias);
     
@@ -309,7 +309,7 @@ static int ddres(rtk_t *rtk, const nav_t *nav, double dt, const double *x,
                  double *azel, const int *iu, const int *ir, int ns, double *v,
                  double *H, double *R, int *vflg,char **msg)
 {
-    prcopt_t *opt=&rtk->opt;
+    const prcopt_t *opt=rtk->opt;
     double bl,dr[3],posu[3],posr[3],*im;
     double *tropr,*tropu,*dtdxr,*dtdxu,*Ri,*Rj,s,lami,lamj,*Hi=NULL;
     int i,j,k,f,nv=0,nb[6]={0},b=0,sysi,sysj,nf=1;
@@ -439,7 +439,7 @@ static int ddmat(rtk_t *rtk, double *D,char **msg)
 								continue;
 						
 						if (rtk->ssat[i-k].lock>0&&!(rtk->ssat[i-k].slip&2)&&
-								rtk->ssat[i-k].azel[1]>=rtk->opt.elmaskar) {
+								rtk->ssat[i-k].azel[1]>=rtk->opt->elmaskar) {
 								rtk->ssat[i-k].fix=2; /* fix */
 								break;
 						}
@@ -452,7 +452,7 @@ static int ddmat(rtk_t *rtk, double *D,char **msg)
 						
 						if (rtk->ssat[j-k].lock>0&&!(rtk->ssat[j-k].slip&2)&&
 								rtk->ssat[i-k].vsat&&
-								rtk->ssat[j-k].azel[1]>=rtk->opt.elmaskar) {
+								rtk->ssat[j-k].azel[1]>=rtk->opt->elmaskar) {
 								D[i+(na+nb)*nx]= 1.0;
 								D[j+(na+nb)*nx]=-1.0;
 								nb++;
@@ -475,7 +475,7 @@ static void restamb(rtk_t *rtk, const double *bias, int nb, double *xa)
     f=0;
 		for (n=i=0;i<MAX_SAT;i++) {
 				if (rtk->ssat[i].fix!=2) continue;
-				index[n++]=IB(i+1,f,&rtk->opt);
+				index[n++]=IB(i+1,f,rtk->opt);
 		}
 		if (n>=2) 
 		{
@@ -496,9 +496,9 @@ static void holdamb(rtk_t *rtk, const double *xa,char **msg)
     
         for (n=i=0;i<MAX_SAT;i++) {
             if (rtk->ssat[i].fix!=2||
-                rtk->ssat[i].azel[1]<rtk->opt.elmaskhold) continue;
+                rtk->ssat[i].azel[1]<rtk->opt->elmaskhold) continue;
             
-            index[n++]=IB(i+1,f,&rtk->opt);
+            index[n++]=IB(i+1,f,rtk->opt);
             rtk->ssat[i].fix=3; /* hold */
         }
         /* constraint to fixed ambiguity */
@@ -525,7 +525,7 @@ static void holdamb(rtk_t *rtk, const double *xa,char **msg)
 /* resolve integer ambiguity by LAMBDA ---------------------------------------*/
 static int resamb_LAMBDA(rtk_t *rtk, double *bias, double *xa,char **msg)
 {
-    prcopt_t *opt=&rtk->opt;
+    const prcopt_t *opt=rtk->opt;
     int i,j,ny,nb,info,nx=rtk->nx,na=rtk->na;
     double *D,*DP,*y,*Qy,*b,*db,*Qb,*Qab,*QQ,s[2];
     
@@ -656,7 +656,7 @@ static int valpos(rtk_t *rtk, const double *v, const double *R, const int *vflg,
 static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
                   const nav_t *nav,char **msg)
 {
-  prcopt_t *opt=&rtk->opt;
+  const prcopt_t *opt=rtk->opt;
   gtime_t time=obs[0].time;
   double *rs,*dts,*var,*y,*e,*azel,*v,*H,*R,*bias,dt;
 	double *xp,*Pp,*xa;
@@ -777,8 +777,8 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 			if (!valpos(rtk,v,R,vflg,nv,4.0,msg)) {
 
 				/* hold integer ambiguity */
-				if (++rtk->nfix>=rtk->opt.minfix&&
-					rtk->opt.modear==ARMODE_FIXHOLD) {
+				if (++rtk->nfix>=rtk->opt->minfix&&
+					rtk->opt->modear==ARMODE_FIXHOLD) {
 					holdamb(rtk,xa,msg);
 				}
 				stat=SOLQ_FIX;
@@ -838,7 +838,7 @@ void rtkinit(rtk_t *rtk,const prcopt_t *opt)
 	char *errmsg=rtk->errbuf;
 	int i,j,tmp;
 	double pos[3];
-	rtk->opt=*opt;
+	rtk->opt=opt;
 	rtk->nx=NX(opt);
   rtk->na=NR(opt);
 	//base position
@@ -898,7 +898,7 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 	int i,nu,nr;
 	int tmp;
 	double ep[6];
-	prcopt_t *opt=&rtk->opt;
+	const prcopt_t *opt=rtk->opt;
 	char *errMsg=rtk->errbuf;
 //	char **msg=&errMsg;
 	for (i=0;i<n;i++)
@@ -919,7 +919,7 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 //	rtk->errLen = errMsg-rtk->errbuf;
 	
 	//rover standard positioning
-	if (pntpos(obs,nu,nav,&rtk->sol,NULL,rtk->ssat,&rtk->opt,&errMsg))	
+	if (pntpos(obs,nu,nav,&rtk->sol,NULL,rtk->ssat,rtk->opt,&errMsg))	
 	{
 		rtk->sol.stat=SOLQ_NONE;
 		rtk->errLen = errMsg-rtk->errbuf;
@@ -927,7 +927,7 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 	}
 	if (time.time !=0)//first solution
 		rtk->tt=timediff(rtk->sol.time,time);
-	if (rtk->opt.mode==PMODE_SINGLE)
+	if (rtk->opt->mode==PMODE_SINGLE)
 	{
 		rtk->sol.stat=SOLQ_SINGLE;
 		return 0;

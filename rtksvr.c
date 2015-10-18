@@ -39,7 +39,8 @@ void rtksvrstart(rtksvr_t* svr)
 	svr->obs[1].n=0;
 	
 	svr->nav.eph =(eph_t  *)malloc(sizeof(eph_t )*MAX_SAT *2);
-		
+		//svr->nav.eph = eph;
+	
 	for (i=0;i<2*MAX_SAT;i++)
 	{
 		svr->nav.eph[i]=eph0;		
