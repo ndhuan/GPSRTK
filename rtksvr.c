@@ -49,10 +49,10 @@ void rtksvrstart(rtksvr_t* svr)
 	
 	svr->nav.n = 2*MAX_SAT;
 	
-	//svr->format[0] = STRFMT_UBX;//rover
-	//svr->format[1] = STRFMT_UBX;//base
-	svr->format[0] = STRFMT_SS2;
-	svr->format[1] = STRFMT_SS2;
+	svr->format[0] = STRFMT_UBX;//rover
+	svr->format[1] = STRFMT_UBX;//base
+	//svr->format[0] = STRFMT_SS2;
+	//svr->format[1] = STRFMT_SS2;
 }
 /* -- void updatesvr(rtksvr_t* svr,Error Err, int index) --------------------------------------
  * 

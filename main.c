@@ -370,15 +370,13 @@ int main()
 	ConfigUART(svr.format[0]);
 
 	fobs[0]=fobs[1]=0;
-	svr.raw[1].time.time = 1429540822;
+	//svr.raw[1].time.time = 1429540822;
 	
 	while (HAL_UART_Receive_DMA(&UartGPSHandle,svr.buff[0],MAX_RAW_LEN) != HAL_OK);	
 	while (HAL_UART_Receive_DMA(&UartRFHandle,svr.buff[1],MAX_RAW_LEN) != HAL_OK);	
 
 	HAL_Delay(3000);
 	sendRequest(svr.format[0]);
-
-	
 	
 //	test();
 
@@ -474,9 +472,9 @@ int main()
 					t=HAL_GetTick()-start;
 					svr.rtk.sol.processTime = t;	
 #endif					
-					if (svr.rtk.sol.stat==SOLQ_FLOAT)
-						HAL_UART_Transmit_DMA(&UartResultHandle,(unsigned char*)svr.rtk.errbuf,svr.rtk.errLen);
-					else
+					//if (svr.rtk.sol.stat==SOLQ_FLOAT)
+					//	HAL_UART_Transmit_DMA(&UartResultHandle,(unsigned char*)svr.rtk.errbuf,svr.rtk.errLen);
+					//else
 						outsol(res,&svr.rtk.sol,svr.rtk.rb);
 					SendStr(result);
 				}

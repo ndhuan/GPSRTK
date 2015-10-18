@@ -230,9 +230,9 @@ static void zdres_sat(int base, double r, const obsd_t *obs, const nav_t *nav,
                       const prcopt_t *opt, double *y)
 {
   /* residuals = observable - pseudorange */
-//  if (testsnr(base,azel[1],obs->SNR*0.25,&opt->snrmask)) {
-//      return;
-//  }
+  if (testsnr(base,azel[1],obs->SNR*0.25,&opt->snrmask)) {
+      return;
+  }
 	if (obs->L!=0.0) y[0]=obs->L*CLIGHT/FREQ1-r;
   if (obs->P!=0.0) y[1]=obs->P-r;
 }
@@ -628,8 +628,9 @@ static int valpos(rtk_t *rtk, const double *v, const double *R, const int *vflg,
         type=(vflg[i]>> 4)&0xF;
         freq=vflg[i]&0xF;
         stype=type==0?"L":(type==1?"L":"C");
-        (*msg)+=sprintf(*msg,"large residual (sat=%2d-%2d %s%d v=%6.3f sig=%.3f)\n",
-              sat1,sat2,stype,freq+1,v[i],SQRT(R[i+i*nv]));
+				//WARNING: msg length may be greater than MAX_ERRMSG
+        //(*msg)+=sprintf(*msg,"large residual (sat=%2d-%2d %s%d v=%6.3f sig=%.3f)\n",
+				//      sat1,sat2,stype,freq+1,v[i],SQRT(R[i+i*nv]));
     }
 #if 0 /* omitted v.2.4.0 */
     if (stat&&nv>NP(opt)) {
@@ -899,7 +900,7 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 	int tmp;
 	double ep[6];
 	prcopt_t *opt=&rtk->opt;
-	char *errMsg=rtk->errbuf;
+	char *errMsg=rtk->errbuf;//MAKE SURE errMsg length is less than MAX_ERRMSG
 //	char **msg=&errMsg;
 	for (i=0;i<n;i++)
 	{
@@ -910,11 +911,11 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 	nu=i;//number of rover observations
 	nr=n-nu;
 	time=rtk->sol.time;//previous epoch
-	time2epoch(time,ep);
-	if ((ep[4]>=44.0) && (ep[5]>=5.0))
-	{
-		errMsg +=sprintf(errMsg,"die");
-	}
+//	time2epoch(time,ep);
+//	if ((ep[4]>=44.0) && (ep[5]>=5.0))
+//	{
+//		errMsg +=sprintf(errMsg,"die");
+//	}
 //	errMsg+=sprintf(errMsg,"nu:%d,nr:%d\n",nu,nr);
 //	rtk->errLen = errMsg-rtk->errbuf;
 	

@@ -55,7 +55,7 @@
 
 #define MAX_SAT 32
 #define MAX_RAW_LEN 4000
-#define MAX_ERRMSG 500
+#define MAX_ERRMSG 1000
 #define MAX_OBS 24//max observation per epoch (rover+base)
 #define MAXDTOE 7200.0
 #define MAX_SOL_BUF 5
