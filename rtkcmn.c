@@ -392,7 +392,10 @@ extern int matinv(double *A, int n)
     indx=imat(n,1); B=mat(n,n); 
 		//SendIntStr(TIM2->CNT-start);
 		if (!indx || !B)
+		{
+			free(indx);free(B);
 			return -1;
+		}
 		matcpy(B,A,n,n);
     if (ludcmp(B,n,indx,&d)) {free(indx); free(B); return -2;}
     for (j=0;j<n;j++) {

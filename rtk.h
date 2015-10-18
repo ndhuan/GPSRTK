@@ -54,7 +54,7 @@
 #define P2_55       2.775557561562891E-17 /* 2^-55 */
 
 #define MAX_SAT 32
-#define MAX_RAW_LEN 3000
+#define MAX_RAW_LEN 4000
 #define MAX_ERRMSG 500
 #define MAX_OBS 24//max observation per epoch (rover+base)
 #define MAXDTOE 7200.0
@@ -77,9 +77,9 @@
 //	#define MSG_LEN 141
 //#endif
 
-#define SOLF_ENU 
+//#define SOLF_ENU 
 //#define SOLF_ECEF 
-//#define SOLF_LLH
+#define SOLF_LLH
 
 #define SQR(x) (x*x)
 #define sos2(x) (x[0]*x[0]+x[1]*x[1])
@@ -402,7 +402,7 @@ typedef struct{
 //	int na, namax;//number of almanac data
 	eph_t* eph;
 	erp_t erp;//earth rotation param
-	alm_t *alm;         /* almanac data */
+//	alm_t *alm;         /* almanac data */
 	double utc_gps[4];//GPS delta-UTC params {A0, A1, T, W}
 	double ion_gps[8];//GPS iono model params {a0-a3,b0-b3}
 	int leaps;
@@ -557,11 +557,11 @@ extern int testsnr(int base, double el, double snr,
                    const snrmask_t *mask);
 extern int satno(int sys, int prn);
 //rcvraw.c
-void init_raw(raw_t *raw,eph_t *eph,alm_t* alm);
+void init_raw(raw_t *raw,eph_t *eph);
 extern Error decode_subfrm1(const uint8_t* buff,eph_t *eph);
 extern Error decode_subfrm2(const uint8_t* buff,eph_t *eph);
 extern Error decode_subfrm3(const uint8_t* buff,eph_t *eph);
-extern Error decode_frame(const unsigned char *buff, eph_t *eph, alm_t *alm,
+extern Error decode_frame(const unsigned char *buff, eph_t *eph,
                         double *ion, double *utc, int *leaps);
 //rtksvr.c
 extern void rtksvrstart(rtksvr_t* svr);

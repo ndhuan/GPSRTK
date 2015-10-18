@@ -1,17 +1,18 @@
 #include <math.h>
 #include "rtk.h"
 #include "main.h"
-
+#define SQR(x)   ((x)*(x))
 #define STD_BRDCCLK 30.0          /* error of broadcast clock (m) */
-
-//satellite clock does not include relativity correction and tdg
-double var_uraeph(int sva)
+/* variance by ura ephemeris (ref [1] 20.3.3.3.1.1) --------------------------*/
+static double var_uraeph(int ura)
 {
-	const double ura[]={2.4,3.4,4.85,6.85,9.65,13.65,24.0,48.0,96.0,192.0,384.0,768.0,1536.0,
-        3072.0,6144.0};
-	double temp=ura[sva];
-	return temp*temp;	
+    const double ura_value[]={   
+        2.4,3.4,4.85,6.85,9.65,13.65,24.0,48.0,96.0,192.0,384.0,768.0,1536.0,
+        3072.0,6144.0
+    };
+    return ura<0||15<ura?SQR(6144.0):SQR(ura_value[ura]);
 }
+//satellite clock does not include relativity correction and tdg
 /* -- double eph2clk(gtime_t time,const eph_t *eph) --------------------------------------
  * 
  * Description	: broadcast ephemeris to sat clock bias
@@ -29,37 +30,6 @@ double eph2clk(gtime_t time,const eph_t *eph)
 		t -= eph->f0 + eph->f1*t + eph->f2*t*t;
 	}
 	return eph->f0 + eph->f1*t + eph->f2*t*t;
-}
-eph_t *seleph(gtime_t time, int sat, int iode, const nav_t *nav, char **msg)
-{
-	double t,tmin,tmax;
-	int i,j=-1;
-	tmax=MAXDTOE+1.0;
-	tmin=tmax+1.0;
-	
-
-	for (i=sat-1;i<2*MAX_SAT;i+=MAX_SAT)
-	{
-		if (nav->eph[i].sat!=sat) continue;
-		//*msg += sprintf(*msg,"seleph1");
-		if (iode>=0&&nav->eph[i].iode!=iode)continue;
-		//*msg += sprintf(*msg,"seleph2");
-		if ((t=fabs(timediff(nav->eph[i].toe,time)))>tmax) continue;
-		//*msg += sprintf(*msg,"seleph3");
-		if (iode>=0) return nav->eph+i;
-		//*msg += sprintf(*msg,"seleph4");
-		if (t<=tmin)/* choose eph that has toe closest to time */
-		{
-			j=i;
-			tmin=t;
-		}
-	}
-	if (iode>=0||j<0)
-	{
-		//*msg += sprintf(*msg,"seleph5");
-		return NULL;
-	}
-	return nav->eph+j;
 }
 /* -- void eph2pos(gtime_t time, const eph_t *eph,double *rs,double *dts,double *var)--------------------------------------
  * Description	: broadcast ephemeris to sat position and clock bias 
@@ -110,6 +80,49 @@ void eph2pos(gtime_t time, const eph_t *eph,double *rs,double *dts,double *var)
 	
 	*var=var_uraeph(eph->sva);
 }
+
+
+eph_t *seleph(gtime_t time, int sat, int iode, const nav_t *nav, char **msg)
+{
+	double t,tmin,tmax;
+	int i,j=-1;
+	tmax=MAXDTOE+1.0;
+	tmin=tmax+1.0;
+	
+
+	for (i=sat-1;i<2*MAX_SAT;i+=MAX_SAT)
+	{
+		if (nav->eph[i].sat!=sat) continue;
+		//*msg += sprintf(*msg,"seleph1");
+		if (iode>=0&&nav->eph[i].iode!=iode)continue;
+		//*msg += sprintf(*msg,"seleph2");
+		if ((t=fabs(timediff(nav->eph[i].toe,time)))>tmax) continue;
+		//*msg += sprintf(*msg,"seleph3");
+		if (iode>=0) return nav->eph+i;
+		//*msg += sprintf(*msg,"seleph4");
+		if (t<=tmin)/* choose eph that has toe closest to time */
+		{
+			j=i;
+			tmin=t;
+		}
+	}
+	if (iode>=0||j<0)
+	{
+		//*msg += sprintf(*msg,"seleph5");
+		return NULL;
+	}
+	return nav->eph+j;
+}
+/* satellite clock with broadcast ephemeris ----------------------------------*/
+static int ephclk(gtime_t time, gtime_t teph, int sat, const nav_t *nav,
+                  double *dts,char **msg)
+{
+    eph_t  *eph;
+		if (!(eph=seleph(teph,sat,-1,nav,msg))) return 0;
+    //*msg += sprintf(*msg,"ephclk");
+		*dts=eph2clk(time,eph);
+    return 1;
+}
 /* satellite position and clock by broadcast ephemeris -----------------------*/
 static int ephpos(gtime_t time, gtime_t teph, int sat, const nav_t *nav,
                   int iode, double *rs, double *dts, double *var, int *svh,char **msg)
@@ -131,16 +144,7 @@ static int ephpos(gtime_t time, gtime_t teph, int sat, const nav_t *nav,
     
     return 1;
 }
-/* satellite clock with broadcast ephemeris ----------------------------------*/
-static int ephclk(gtime_t time, gtime_t teph, int sat, const nav_t *nav,
-                  double *dts,char **msg)
-{
-    eph_t  *eph;
-		if (!(eph=seleph(teph,sat,-1,nav,msg))) return 0;
-    //*msg += sprintf(*msg,"ephclk");
-		*dts=eph2clk(time,eph);
-    return 1;
-}
+
 /* satellite position and clock ------------------------------------------------
 * compute satellite position, velocity and clock
 * args   : gtime_t time     I   time (gpst)
@@ -198,6 +202,7 @@ void satposs(gtime_t teph,const obsd_t *obs,int n,const nav_t *nav,
     if (!ephclk(time[i],teph,obs[i].sat,nav,&dt,msg)) {
       continue;
     }
+		//*msg += sprintf(*msg,"clk");
 		time[i]=timeadd(time[i],-dt);
 		//start = TIM2->CNT;
 		/* satellite position and clock at transmission time */

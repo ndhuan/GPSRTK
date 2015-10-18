@@ -12,11 +12,118 @@
 #define ERR_BRDCI   0.5         /* broadcast iono model error factor */
 #define ERR_CBIAS   0.3         /* code bias error std (m) */
 #define REL_HUMI    0.7         /* relative humidity for saastamoinen model */
-#define R						100.0
-#define a						0.03
-#define b						0.03
+//#define R						100.0
+//#define a						0.03
+//#define b						0.03
 
 //const double chi_square[]={10.83,13.82,16.27,18.47,20.51};//0.1%
+/* pseudorange measurement error variance ------------------------------------*/
+static double varerr(const prcopt_t *opt, double el)
+{
+    double fact,varr;
+    fact=EFACT_GPS;
+    varr=SQR(opt->err[0])*(SQR(opt->err[1])+SQR(opt->err[2])/sin(el));
+    return SQR(fact)*varr;
+}
+//0:ok,!0:not
+extern int ionocorr(gtime_t time, const nav_t *nav, int sat, const double *pos,
+                    const double *azel, double *ion, double *var)
+{
+    /* broadcast model */
+    
+        *ion=ionmodel(time,nav->ion_gps,pos,azel);
+        *var=SQR(*ion*ERR_BRDCI);
+        return 0;
+    
+    /* sbas ionosphere model */
+//    if (ionoopt==ION_SBAS) {
+//        return sbsioncorr(time,nav,pos,azel,ion,var);
+//    }
+//		return -1;
+}
+//0:ok,!0:not
+extern int tropcorr(gtime_t time, const nav_t *nav, const double *pos,
+                    const double *azel, double *trp, double *var)
+{
+	*trp=tropmodel(time,pos,azel,REL_HUMI);
+  *var=SQR(ERR_SAAS/(sin(azel[1])+0.1));
+  return 0;
+}
+
+/*	
+Compute residual and other components for LSE
+args:	int *svh				I		SV health (-1: ephemeris unavailable,!=0 unhealthy sat)
+			int n						I		number of observation data
+			double *rs			I		sat pos/vel (ecef), size n
+			double *dts			I		sat clock bias
+			double *x				I		receiver pos/clock bias	
+			double *azel 		O		{az,el} (rad), size 2n
+			double *H				O		design matrix
+			double *v				O		residual of all obs data
+			double *resp		O   residual of valid obs data
+			double *var			O		residual error variance
+			double *nv			O		number of valid sat
+			int *vsat				O		valid sat flag
+*/
+static void rescode(const obsd_t *obs, const nav_t *nav,const int *svh,
+		int n, double *rs, double *dts,double *azel, double *H, 
+		double *v,double *var_sat,double *var, double *resp,double *x,int *nv,int *vsat,const prcopt_t *opt, char **msg)
+{
+	int i,sat;
+	double pos[3],e[3];
+	double P,ion,trop,var_P,var_ion,var_trop,r;
+	*nv=0;
+	ecef2pos(x,pos);
+	for (i=0;i<n;i++)
+	{
+		vsat[i]=0;
+		azel[i*2]=azel[i*2+1]=resp[i]=0.0;
+		if (svh[i])//unhealthy satellite
+		{			
+			**msg='s';
+			(*msg)++;
+			continue;			
+		}
+		if ((r=geodist(rs+i*6,x,e))<=0) 
+		{						
+			**msg='r';
+			(*msg)++;
+			continue;
+		}
+		if (satazel(pos,e,azel+i*2)<opt->elmin)
+		{			
+			**msg='a';
+			(*msg)++;
+			continue;
+		}
+		//pseudorange (group delay correction)
+		sat=(obs+i)->sat;
+		P=(obs+i)->P;
+		if (nav->eph[sat-1].sat==sat)
+			P-=nav->eph[sat-1].tgd[0]*CLIGHT;
+		else if (nav->eph[MAX_SAT+sat-1].sat==sat)
+			P-=nav->eph[MAX_SAT+sat-1].tgd[0]*CLIGHT;
+		if (P==0.0)
+			continue;
+		var_P = SQR(ERR_CBIAS);
+		//ionosheric corrections: check opt for sbas|broadcast model
+		ionocorr(obs[i].time,nav,obs[i].sat,pos,azel+i*2,&ion,&var_ion);
+		//tropospheric corrections: 
+		tropcorr(obs[i].time,nav,pos,azel+2*i,&trop,&var_trop);
+		
+		//*msg+=sprintf(*msg,"%f %f %f %f %f %f\n",P,r,ion,trop,x[3],dts[2*i]);
+		
+		v[*nv]=P-(r+ion+trop+x[3]-CLIGHT*dts[i*2]);
+		vsat[i]=1;resp[i]=v[*nv];
+
+		H[(*nv)*4]=-e[0];
+		H[(*nv)*4+1]=-e[1];
+		H[(*nv)*4+2]=-e[2];		
+		H[(*nv)*4+3]=1.0;
+		var[*nv]=varerr(opt,azel[1+i*2])+var_sat[i]+var_ion+var_trop+var_P;
+		(*nv)++;
+	}
+}
 static int solval(double *v,int nv,char **msg,double *azel,int n, int *vsat,const prcopt_t *opt)
 {
 	int i,ns;
@@ -50,104 +157,9 @@ static int solval(double *v,int nv,char **msg,double *azel,int n, int *vsat,cons
 	}
 	return 0;
 }
-extern int ionocorr(gtime_t time, const nav_t *nav, int sat, const double *pos,
-                    const double *azel, double *ion, double *var)
-{
-    /* broadcast model */
-    
-        *ion=ionmodel(time,nav->ion_gps,pos,azel);
-        *var=SQR(*ion*ERR_BRDCI);
-        return 0;
-    
-    /* sbas ionosphere model */
-//    if (ionoopt==ION_SBAS) {
-//        return sbsioncorr(time,nav,pos,azel,ion,var);
-//    }
-//		return -1;
-}
-extern int tropcorr(gtime_t time, const nav_t *nav, const double *pos,
-                    const double *azel, double *trp, double *var)
-{
-	*trp=tropmodel(time,pos,azel,REL_HUMI);
-  *var=SQR(ERR_SAAS/(sin(azel[1])+0.1));
-  return 0;
-}
-/* pseudorange measurement error variance ------------------------------------*/
-static double varerr(const prcopt_t *opt, double el)
-{
-    double fact,varr;
-    fact=EFACT_GPS;
-    varr=SQR(opt->err[0])*(SQR(opt->err[1])+SQR(opt->err[2])/sin(el));
-    return SQR(fact)*varr;
-}
-/*	
-Compute residual and other components for LSE
-args:	int *svh				I		SV health (-1: ephemeris unavailable,!=0 unhealthy sat)
-			int n						I		number of observation data
-			double *rs			I		sat pos/vel (ecef), size n
-			double *dts			I		sat clock bias
-			double *x				I		receiver pos/clock bias	
-			double *azel 		O		{az,el} (rad), size 2n
-			double *H				O		design matrix
-			double *v				O		residual of all obs data
-			double *resp		O   residual of valid obs data
-			double *var			O		residual error variance
-			double *nv			O		number of valid sat
-			int *vsat				O		valid sat flag
-*/
-static void rescode(const obsd_t *obs, const nav_t *nav,const int *svh,
-		int n, double *rs, double *dts,double *azel, double *H, 
-		double *v,double *var_sat,double *var, double *resp,double *x,int *nv,int *vsat,const prcopt_t *opt, char **msg)
-{
-	int i,sat;
-	double pos[3],e[3];
-	double P,ion,trop,var_P,var_ion,var_trop,r;
-	*nv=0;
-	ecef2pos(x,pos);
-	for (i=0;i<n;i++)
-	{
-		vsat[i]=0;
-		azel[i*2]=azel[i*2+1]=resp[i]=0.0;
-		if (svh[i])//unhealthy satellite
-		{			
-			continue;			
-		}
-		if ((r=geodist(rs+i*6,x,e))<=0) 
-		{						
-			continue;
-		}
-		if (satazel(pos,e,azel+i*2)<opt->elmin)
-		{			
-			continue;
-		}
-		//pseudorange (group delay correction)
-		sat=(obs+i)->sat;
-		P=(obs+i)->P;
-		if (nav->eph[sat-1].sat==sat)
-			P-=nav->eph[sat-1].tgd[0]*CLIGHT;
-		else if (nav->eph[MAX_SAT+sat-1].sat==sat)
-			P-=nav->eph[MAX_SAT+sat-1].tgd[0]*CLIGHT;
-		if (P==0.0)
-			continue;
-		var_P = SQR(ERR_CBIAS);
-		//ionosheric corrections: check opt for sbas|broadcast model
-		ionocorr(obs[i].time,nav,obs[i].sat,pos,azel+i*2,&ion,&var_ion);
-		//tropospheric corrections: 
-		tropcorr(obs[i].time,nav,pos,azel+2*i,&trop,&var_trop);
-		
-		//*msg+=sprintf(*msg,"%f %f %f %f %f %f\n",P,r,ion,trop,x[3],dts[2*i]);
-		
-		v[*nv]=P-(r+ion+trop+x[3]-CLIGHT*dts[i*2]);
-		vsat[i]=1;resp[i]=v[*nv];
 
-		H[(*nv)*4]=-e[0];
-		H[(*nv)*4+1]=-e[1];
-		H[(*nv)*4+2]=-e[2];		
-		H[(*nv)*4+3]=1.0;
-		var[*nv]=varerr(opt,azel[1+i*2])+var_sat[i]+var_ion+var_trop+var_P;
-		(*nv)++;
-	}
-}
+
+
 /* int estpos(const obsd_t *obs, const nav_t *nav,int n, double *rs, double *dts,
 		double *resp,double *sva, sol_t *sol, double *azel, int *vsat, char *msg,
 		prcopt_t *opt)
@@ -311,11 +323,11 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol,
 	}	
 	//sat positions, vels, clocks (rs[i]={0.0,0.0,0.0} if ephemeris is unavailable)
 	satposs(sol->time,obs,n,nav,rs,dts,var_sat,svh,msg);
-	
-
-	
+		
 	i = estpos(obs,nav,n,svh,rs,dts,resp,var_sat,azel_,vsat,opt,sol,msg);
-	
+	if (azel) {
+		for (i=0;i<n*2;i++) azel[i]=azel_[i];
+	}
 	//SendIntStr(HAL_GetTick()-start);
 	
 	free(rs);free(dts);free(var_sat);free(azel_);free(resp);	

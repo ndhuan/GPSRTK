@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "rtk.h"
-
+#include "main.h"
 
 #define SOH_BYTE 0x01
 #define ID_SS2LLH   20          /* ss2 message ID#20 navigation data (user) */
@@ -119,6 +119,9 @@ Error decode_ss2eph(raw_t* raw)
 	raw->nav.eph[sat]=eph;
 	raw->ephsat = sat+1;
 //	return NO_ERROR;
+	//SendIntStr(eph.sat);
+	//SendInt((int)eph.toes);
+	//SendInt(eph.toe.time);
 	return EPHEMERIS;
 }
 Error decode_ss2meas(raw_t* raw)
@@ -229,9 +232,7 @@ Error decode_ss2(raw_t* raw)
  * Return		: 
  */
 Error input_ss2(raw_t* raw, uint8_t data)
-{
-
-	
+{	
 		if ((raw->nbyte) == 0)
 		{
 			if (!sync_ss2(raw->buff,data))

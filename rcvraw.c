@@ -1,60 +1,11 @@
 #include <cstdlib>
 #include "rtk.h"
-/* -- void init_raw(raw_t* raw) --------------------------------------
- * 
- * Description	: 
- * Parameters	: 
- * Return		: 
- */
-void init_raw(raw_t* raw,eph_t *eph,alm_t* alm)
-{
-	int i=0,j=0;	
-	gtime_t time0 = {0};
-	obsd_t data0 = {{0}};
-	alm_t  alm0 ={0,-1};
-	eph_t eph0 ={0,-1,-1};
-	
-	raw->time = raw->tobs = time0;
-	
-	raw->obs.n=0;
-//	raw->obuf.n=0;
-	for (i=0;i<MAX_OBS;i++)
-	{
-		raw->obs.data[i]=data0;
-	}
+#include "main.h"
 
-	for (i=0;i<MAX_SAT;i++)
-	{
-		eph[i]=eph0;
-		alm[i]=alm0;
-	}
-	raw->nav.eph = eph;
-	raw->nav.alm = alm;
-	raw->nav.n = MAX_SAT;
-	raw->ephsat = 0;
-	
-	for (i=0;i<MAX_SAT;i++)
-	{
-		for (j=0;j<150;j++)
-		{
-			raw->subfrm[i][j] = 0;			
-		}
-		raw->icpp[i]=raw->off[i]=0;		
-	}
-	raw->icpc=0;
-
-	raw->nbyte = raw->len = 0;
-	raw->iod = raw->flag = 0;
-	raw->tod = -1;
-
-	for (i=0;i<MAX_RAW_LEN;i++)
-		raw->buff[i] = 0;
-	
-}
 Error decode_subfrm1(const uint8_t* buff,eph_t *eph)
 {
 	double tow,toc;
-	int week, iodc0, iodc1;
+	int week, iodc0, iodc1,tgd;
 	
 	tow = getbitu(buff,2,0,17)*6.0;
 //	eph->week = getbitu(buff,3,0,10);
@@ -62,13 +13,15 @@ Error decode_subfrm1(const uint8_t* buff,eph_t *eph)
 	eph->sva = getbitu(buff,3,12,4);
 	eph->svh = getbitu(buff,3,16,6);
 	iodc0 = getbitu(buff,3,22,2);
-	eph->tgd[0] = getbits(buff,7,16,8)*P2_31;
+	tgd = getbits(buff,7,16,8);
 	iodc1 = getbitu(buff,8,0,8);
 	toc = getbitu(buff,8,8,16)*16.0;
 	eph->f2 = getbits(buff,9,0,8)*P2_55;
 	eph->f1 = getbits(buff,9,8,16)*P2_43;
 	eph->f0 = getbits(buff,10,0,22)*P2_31;
 	
+	eph->tgd[0]=tgd==-128?0.0:tgd*P2_31; /* ref [4] */
+
 	eph->iodc = (iodc0<<8)+iodc1;
 	
 	// eph->week=adjgpsweek(week); /* week of tow */ 
@@ -119,8 +72,8 @@ Error decode_subfrm3(const uint8_t* buff,eph_t *eph)
 	toc=time2gpst(eph->toc,NULL);
   if      (eph->toes<tow-302400.0) {eph->week++; tow-=604800.0;}
   else if (eph->toes>tow+302400.0) {eph->week--; tow+=604800.0;}
-  eph->toe=gpst2time(eph->week,eph->toes);
-  eph->toc=gpst2time(eph->week,toc);
+  eph->toe=gpst2time(eph->week,eph->toes);	
+	eph->toc=gpst2time(eph->week,toc);
   eph->ttr=gpst2time(eph->week,tow);
 
 	return NO_ERROR2;
@@ -211,7 +164,7 @@ Error decode_subfrm3(const uint8_t* buff,eph_t *eph)
 //    }
 //		return NO_ERROR;
 //}
-extern Error decode_frame(const unsigned char *buff, eph_t *eph, alm_t *alm,
+extern Error decode_frame(const unsigned char *buff, eph_t *eph,
                         double *ion, double *utc, int *leaps)
 {
 	int32_t id=getbitu(buff,2,20,3);
@@ -224,3 +177,54 @@ extern Error decode_frame(const unsigned char *buff, eph_t *eph, alm_t *alm,
   }
 	return ID_ERROR;
 }	
+/* -- void init_raw(raw_t* raw) --------------------------------------
+ * 
+ * Description	: 
+ * Parameters	: 
+ * Return		: 
+ */
+void init_raw(raw_t* raw,eph_t *eph)
+{
+	int i=0,j=0;	
+	gtime_t time0 = {0};
+	obsd_t data0 = {{0}};
+	//alm_t  alm0 ={0,-1};
+	eph_t eph0 ={0,-1,-1};
+	
+	raw->time = raw->tobs = time0;
+	
+	raw->obs.n=0;
+//	raw->obuf.n=0;
+	for (i=0;i<MAX_OBS;i++)
+	{
+		raw->obs.data[i]=data0;
+	}
+
+	for (i=0;i<MAX_SAT;i++)
+	{
+		eph[i]=eph0;
+		//alm[i]=alm0;
+	}
+	raw->nav.eph = eph;
+	//raw->nav.alm = alm;
+	raw->nav.n = MAX_SAT;
+	raw->ephsat = 0;
+	
+	for (i=0;i<MAX_SAT;i++)
+	{
+		for (j=0;j<150;j++)
+		{
+			raw->subfrm[i][j] = 0;			
+		}
+		raw->icpp[i]=raw->off[i]=0;		
+	}
+	raw->icpc=0;
+
+	raw->nbyte = raw->len = 0;
+	raw->iod = raw->flag = 0;
+	raw->tod = -1;
+
+	for (i=0;i<MAX_RAW_LEN;i++)
+		raw->buff[i] = 0;
+	
+}

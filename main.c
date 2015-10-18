@@ -2,7 +2,6 @@
 #include "rtk.h"
 
 #define TIMER_FREQ_HZ 5
-#define UBLOX
 
 TIM_HandleTypeDef TimerHandle;
 UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle;
@@ -255,7 +254,81 @@ int decode_raw(rtksvr_t* svr, int index)
 			}
 			break;
 		}
+		case STRFMT_SS2:
+		{
+			if (svr->buffPtr[index] + svr->nb[index] <= MAX_RAW_LEN)
+			{
+				for (i = svr->buff[index] + svr->buffPtr[index] ; 
+							i < svr->buff[index] + svr->buffPtr[index] + svr->nb[index]; i++)
+				{
+					err = input_ss2(&svr->raw[index],*i);
+					if (err>=NO_ERROR1)
+					{
+						updatesvr(svr,err,index);
+						if (err==OBS)
+						{
+							res+=1;
+						}
+						else if (err==EPHEMERIS)
+						{
+							res2+=1;
+						}
+						else if (err==SOLUTION)
+						{
+							res3+=1;
+						}
+					}
+				}
+			}
+			else
+			{
+				for (i = svr->buff[index] + svr->buffPtr[index] ; 
+							i < svr->buff[index] + MAX_RAW_LEN; i++)
+				{
+					err = input_ss2(&svr->raw[index],*i);
+					if (err>=NO_ERROR1)
+					{
+						updatesvr(svr,err,index);
+						if (err==OBS)
+						{
+							res+=1;
+						}
+						else if (err==EPHEMERIS)
+						{
+							res2+=1;
+						}
+						else if (err==SOLUTION)
+						{
+							res3+=1;
+						}
+					}
+				}
+				for (i = svr->buff[index] ; 
+					i < svr->buff[index] + svr->nb[index] + svr->buffPtr[index] - MAX_RAW_LEN ; i++)
+				{
+					err = input_ss2(&svr->raw[index],*i);
+					if (err>=NO_ERROR1)
+					{
+						updatesvr(svr,err,index);
+						if (err==OBS)
+						{
+							res+=1;
+						}
+						else if (err==EPHEMERIS)
+						{
+							res2+=1;
+						}
+						else if (err==SOLUTION)
+						{
+							res3+=1;
+						}
+					}
+				}		
+			}
+			break;
+		}
 	}
+
 /*
 	if (index==0)
 	{
@@ -297,6 +370,7 @@ int main()
 	ConfigUART(svr.format[0]);
 
 	fobs[0]=fobs[1]=0;
+	svr.raw[1].time.time = 1429540822;
 	
 	while (HAL_UART_Receive_DMA(&UartGPSHandle,svr.buff[0],MAX_RAW_LEN) != HAL_OK);	
 	while (HAL_UART_Receive_DMA(&UartRFHandle,svr.buff[1],MAX_RAW_LEN) != HAL_OK);	
@@ -304,6 +378,7 @@ int main()
 	HAL_Delay(3000);
 	sendRequest(svr.format[0]);
 
+	
 	
 //	test();
 
@@ -399,7 +474,10 @@ int main()
 					t=HAL_GetTick()-start;
 					svr.rtk.sol.processTime = t;	
 #endif					
-					outsol(res,&svr.rtk.sol,svr.rtk.rb);
+					if (svr.rtk.sol.stat==SOLQ_FLOAT)
+						HAL_UART_Transmit_DMA(&UartResultHandle,(unsigned char*)svr.rtk.errbuf,svr.rtk.errLen);
+					else
+						outsol(res,&svr.rtk.sol,svr.rtk.rb);
 					SendStr(result);
 				}
 				else

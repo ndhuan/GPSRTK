@@ -223,13 +223,13 @@ static Error decode_ephem(int sat, raw_t *raw)
 /* decode almanac and ion/utc ------------------------------------------------*/
 static int decode_alm1(int sat, raw_t *raw)
 {
-  return decode_frame(raw->subfrm[sat-1]+90,NULL,raw->nav.alm,raw->nav.ion_gps,
+  return decode_frame(raw->subfrm[sat-1]+90,NULL,raw->nav.ion_gps,
                      raw->nav.utc_gps,&raw->nav.leaps);
 }
 /* decode almanac ------------------------------------------------------------*/
 static Error decode_alm2(int sat, raw_t *raw)
 {
-  return decode_frame(raw->subfrm[sat-1]+120,NULL,raw->nav.alm,NULL,NULL,NULL);
+  return decode_frame(raw->subfrm[sat-1]+120,NULL,NULL,NULL,NULL);
 }
 /* decode gps and qzss navigation data ---------------------------------------*/
 static Error decode_nav(raw_t *raw, int sat, int off)

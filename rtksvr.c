@@ -2,11 +2,11 @@
 #include "main.h"
 #include "rtk.h"
 
-static eph_t eph[2*MAX_SAT];
+//static eph_t eph[2*MAX_SAT];
 static eph_t REph[MAX_SAT];
 static eph_t BEph[MAX_SAT];
-static alm_t Ralm[MAX_SAT];
-static alm_t Balm[MAX_SAT];
+//static alm_t Ralm[MAX_SAT];
+//static alm_t Balm[MAX_SAT];
 //static obsd_t RObsData[MAX_OBS] ;
 //static obsd_t BObsData[MAX_OBS];
 
@@ -30,25 +30,29 @@ void rtksvrstart(rtksvr_t* svr)
 	
 //	svr->solbuf = sol0;	
 		
-	init_raw(svr->raw,REph,Ralm);
-	init_raw(svr->raw+1,BEph,Balm);	
+	init_raw(svr->raw,REph);
+	init_raw(svr->raw+1,BEph);	
 	
 	svr->ftime = time0;	
 	
 	svr->obs[0].n=0;
 	svr->obs[1].n=0;
 	
+	svr->nav.eph =(eph_t  *)malloc(sizeof(eph_t )*MAX_SAT *2);
+		
 	for (i=0;i<2*MAX_SAT;i++)
 	{
-		eph[i]=eph0;		
-		eph[i].ttr = time0;
-		eph[i].sat=0;
+		svr->nav.eph[i]=eph0;		
+		svr->nav.eph[i].ttr = time0;
+		svr->nav.eph[i].sat=0;
 	}
-	svr->nav.eph = eph;
+	
 	svr->nav.n = 2*MAX_SAT;
 	
-	svr->format[0] = STRFMT_UBX;//rover
-	svr->format[1] = STRFMT_UBX;//base
+	//svr->format[0] = STRFMT_UBX;//rover
+	//svr->format[1] = STRFMT_UBX;//base
+	svr->format[0] = STRFMT_SS2;
+	svr->format[1] = STRFMT_SS2;
 }
 /* -- void updatesvr(rtksvr_t* svr,Error Err, int index) --------------------------------------
  * 
