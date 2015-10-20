@@ -28,8 +28,8 @@ const prcopt_t default_opt={ /* defaults processing options */
     {3.0,0.9999,0.20},          /* thresar */
     0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
     30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
-    {0},{0},{10.780175707,106.660899381,31.5523}                /* baseline,ru,rb */
-
+    {0},{0},{10.780175707,106.660899381,31.5523}//ublox m8n                /* baseline,ru,rb */
+		//{0},{0},{10.7802305556,106.6609138889,31.5523}//google earth
 //    {"",""},                    /* anttype */
 //    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
 };
@@ -52,8 +52,8 @@ const prcopt_t default_opt={ /* defaults processing options */
     0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
     30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
                  /* baseline,ru,rb */
-		 {0},{0},{10.772931,106.659753,15.330}//san A5
-
+//		 {0},{0},{10.772931,106.659753,15.330}//san A5
+		{0},{0},{10.7728638889,106.6597277778,15.330}//google earth
 //    {"",""},                    /* anttype */
 //    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
 };

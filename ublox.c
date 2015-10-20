@@ -49,21 +49,16 @@ static void setI2(unsigned char *p, short          i) {memcpy(p,&i,2);}
 static void setI4(unsigned char *p, int            i) {memcpy(p,&i,4);}
 static void setR4(unsigned char *p, float          r) {memcpy(p,&r,4);}
 static void setR8(unsigned char *p, double         r) {memcpy(p,&r,8);}
-
-
-/* decode ubx-nav-sol: navigation solution -----------------------------------*/
-static Error decode_navsol(raw_t *raw)
+/* checksum ------------------------------------------------------------------*/
+static int checksum(unsigned char *buff, int len)
 {
-    int itow,ftow,week;
-    unsigned char *p=raw->buff+6;
-       
-    itow=U4(p);
-    ftow=I4(p+4);
-    week=U2(p+8);
-    if ((U1(p+11)&0x0C)==0x0C) {
-        raw->time=gpst2time(week,itow*1E-3+ftow*1E-9);
+    unsigned char cka=0,ckb=0;
+    int i;
+    
+    for (i=2;i<len-2;i++) {
+        cka+=buff[i]; ckb+=cka;
     }
-    return SOLUTION;
+    return cka==buff[len-2]&&ckb==buff[len-1];
 }
 /* ubx gnss indicator (ref [2] 25) -------------------------------------------*/
 static int ubx_sys(int ind)
@@ -77,115 +72,6 @@ static int ubx_sys(int ind)
         case 6: return SYS_GLO;
     }
     return 0;
-}
-/* decode ubx-trk-meas: trace measurement data -------------------------------*/
-static Error decode_trkmeas(raw_t *raw)
-{
-    //static double adrs[MAX_SAT]={0};
-    gtime_t time;
-    double ts,tr=-1.0,t,tau,snr,adr,dop,lock2;
-    int i,n=0,nch,sys,prn,sat,qi,flag,week;
-    unsigned char *p=raw->buff+6;
-
-    if (!raw->time.time) return TIMING_ERROR;
-    
-    /* number of channels */
-    nch=U1(p+2);
-    
-    if (raw->len<112+nch*56) {
-       return LEN_ERROR;
-    }
-    /* time-tag = max(transmission time + 0.08) rounded by 100 ms */
-    for (i=0,p=raw->buff+110;i<nch;i++,p+=56) {
-        if (U1(p+1)<4||ubx_sys(U1(p+4))!=SYS_GPS) continue;
-        if ((t=I8(p+24)*P2_32/1000.0)>tr) tr=t;
-    }
-    if (tr<0.0) return TIMING_ERROR;
-    
-    tr=ROUND((tr+0.08)/0.1)*0.1;
-    
-    /* adjust week handover */
-    t=time2gpst(raw->time,&week);
-    if      (tr<t-302400.0) week--;
-    else if (tr>t+302400.0) week++;
-    time=gpst2time(week,tr);
-    
-    //utc_gpst=timediff(gpst2utc(time),time);
-    
-    for (i=0,p=raw->buff+110;i<nch;i++,p+=56) {
-        
-        /* quality indicator (0:idle,1:search,2:aquired,3:unusable, */
-        /*                    4:code lock,5,6,7:code/carrier lock) */
-        qi=U1(p+1);
-        if (qi<4||7<qi) continue;
-        
-        /* system and satellite number */
-        if (!(sys=ubx_sys(U1(p+4)))) {
-         //   trace(2,"ubx trkmeas: system error\n");
-            continue;
-        }
-        prn=U1(p+5)+(sys==SYS_QZS?192:0);
-        if (!(sat=satno(sys,prn))) {
-         //   trace(2,"ubx trkmeas sat number error: sys=%2d prn=%2d\n",sys,prn);
-            continue;
-        }
-        /* transmission time */
-        ts=I8(p+24)*P2_32/1000.0;
-        //if      (sys==SYS_CMP) ts+=14.0;             /* bdt  -> gpst */
-        //else if (sys==SYS_GLO) ts-=10800.0+utc_gpst; /* glot -> gpst */
-        
-        /* signal travel time */
-        tau=tr-ts;
-        if      (tau<-302400.0) tau+=604800.0;
-        else if (tau> 302400.0) tau-=604800.0;
-        
-        //frq  =U1(p+ 7)-7; /* frequency */
-        flag =U1(p+ 8);   /* tracking status */
-        //lock1=U1(p+16);   /* code lock count */
-        lock2=U1(p+17);   /* phase lock count */
-        snr  =U2(p+20)/256.0;
-        adr  =I8(p+32)*P2_32+(flag&0x40?0.5:0.0);
-        dop  =I4(p+40)*P2_10*10.0;
-        
-        /* set slip flag */
-        if (lock2==0||lock2<raw->lockt[sat-1][0]) raw->lockt[sat-1][1]=1.0;
-        raw->lockt[sat-1][0]=lock2;
-        
-#if 0 /* for debug */
-        trace(2,"[%2d] qi=%d sys=%d prn=%3d frq=%2d flag=%02X ?=%02X %02X "
-              "%02X %02X %02X %02X %02X lock=%3d %3d ts=%10.3f snr=%4.1f "
-              "dop=%9.3f adr=%13.3f %6.3f\n",U1(p),qi,U1(p+4),prn,frq,flag,
-              U1(p+9),U1(p+10),U1(p+11),U1(p+12),U1(p+13),U1(p+14),U1(p+15),
-              lock1,lock2,ts,snr,dop,adr,
-              adrs[sat-1]==0.0||dop==0.0?0.0:(adr-adrs[sat-1])-dop);
-#endif
-        //adrs[sat-1]=adr;
-        
-        /* check phase lock */
-        if (!(flag&0x20)) continue;
-        
-        raw->obs.data[n].time=time;
-        raw->obs.data[n].sat=sat;
-        raw->obs.data[n].P=tau*CLIGHT;
-        raw->obs.data[n].L=-adr;
-        raw->obs.data[n].D=(float)dop;
-        raw->obs.data[n].SNR=(unsigned char)(snr*4.0);
-        //raw->obs.data[n].code=sys==SYS_CMP?CODE_L1I:CODE_L1C;
-        raw->obs.data[n].LLI=raw->lockt[sat-1][1]>0.0?1:0;
-        raw->lockt[sat-1][1]=0.0;
-        
-//        for (j=1;j<NFREQ+NEXOBS;j++) {
-//            raw->obs.data[n].L[j]=raw->obs.data[n].P[j]=0.0;
-//            raw->obs.data[n].D[j]=0.0;
-//            raw->obs.data[n].SNR[j]=raw->obs.data[n].LLI[j]=0;
-//            raw->obs.data[n].code[j]=CODE_NONE;
-//        }
-        n++;
-    }
-    if (n<=0) return OBS_ERROR;
-    raw->time=time;
-    raw->obs.n=n;
-    return OBS;
 }
 /* decode ephemeris ----------------------------------------------------------*/
 static Error decode_ephem(int sat, raw_t *raw)
@@ -231,6 +117,132 @@ static Error decode_alm2(int sat, raw_t *raw)
 {
   return decode_frame(raw->subfrm[sat-1]+120,NULL,NULL,NULL,NULL);
 }
+/* decode ubx-nav-sol: navigation solution -----------------------------------*/
+static Error decode_navsol(raw_t *raw)
+{
+    int itow,ftow,week;
+    unsigned char *p=raw->buff+6;
+       
+    itow=U4(p);
+    ftow=I4(p+4);
+    week=U2(p+8);
+    if ((U1(p+11)&0x0C)==0x0C) {
+        raw->time=gpst2time(week,itow*1E-3+ftow*1E-9);
+    }
+    return SOLUTION;
+}
+
+/* decode ubx-trk-meas: trace measurement data -------------------------------*/
+static Error decode_trkmeas(raw_t *raw)
+{
+    //static double adrs[MAX_SAT]={0};
+    gtime_t time;
+    double ts,tr=-1.0,t,tau,utc_gpst,snr,adr,dop;
+    int i,n=0,nch,sys,prn,sat,qi,flag,lock1,lock2,week;
+    unsigned char *p=raw->buff+6;
+
+    if (!raw->time.time) return TIMING_ERROR;
+    
+    /* number of channels */
+    nch=U1(p+2);
+    
+    if (raw->len<112+nch*56) {
+       return LEN_ERROR;
+    }
+    /* time-tag = max(transmission time + 0.08) rounded by 100 ms */
+    for (i=0,p=raw->buff+110;i<nch;i++,p+=56) {
+        if (U1(p+1)<4||ubx_sys(U1(p+4))!=SYS_GPS) continue;
+        if ((t=I8(p+24)*P2_32/1000.0)>tr) tr=t;
+    }
+    if (tr<0.0) return TIMING_ERROR;
+    
+    tr=ROUND((tr+0.08)/0.1)*0.1;
+    
+    /* adjust week handover */
+    t=time2gpst(raw->time,&week);
+    if      (tr<t-302400.0) week--;
+    else if (tr>t+302400.0) week++;
+    time=gpst2time(week,tr);
+    
+    utc_gpst=timediff(gpst2utc(time),time);
+    
+    for (i=0,p=raw->buff+110;i<nch;i++,p+=56) {
+        
+        /* quality indicator (0:idle,1:search,2:aquired,3:unusable, */
+        /*                    4:code lock,5,6,7:code/carrier lock) */
+        qi=U1(p+1);
+        if (qi<4||7<qi) continue;
+        
+        /* system and satellite number */
+        if (!(sys=ubx_sys(U1(p+4)))) {
+         //   trace(2,"ubx trkmeas: system error\n");
+            continue;
+        }
+        prn=U1(p+5)+(sys==SYS_QZS?192:0);
+        if (!(sat=satno(sys,prn))) {
+         //   trace(2,"ubx trkmeas sat number error: sys=%2d prn=%2d\n",sys,prn);
+            continue;
+        }
+        /* transmission time */
+        ts=I8(p+24)*P2_32/1000.0;
+        if      (sys==SYS_CMP) ts+=14.0;             /* bdt  -> gpst */
+        else if (sys==SYS_GLO) ts-=10800.0+utc_gpst; /* glot -> gpst */
+        
+        /* signal travel time */
+        tau=tr-ts;
+        if      (tau<-302400.0) tau+=604800.0;
+        else if (tau> 302400.0) tau-=604800.0;
+        
+        //frq  =U1(p+ 7)-7; /* frequency */
+        flag =U1(p+ 8);   /* tracking status */
+        lock1=U1(p+16);   /* code lock count */
+        lock2=U1(p+17);   /* phase lock count */
+        snr  =U2(p+20)/256.0;
+        adr  =I8(p+32)*P2_32+(flag&0x40?0.5:0.0);
+        dop  =I4(p+40)*P2_10*10.0;
+        
+        /* set slip flag */
+        if (lock2==0||lock2<raw->lockt[sat-1][0]) raw->lockt[sat-1][1]=1.0;
+        raw->lockt[sat-1][0]=lock2;
+        
+#if 0 /* for debug */
+        trace(2,"[%2d] qi=%d sys=%d prn=%3d frq=%2d flag=%02X ?=%02X %02X "
+              "%02X %02X %02X %02X %02X lock=%3d %3d ts=%10.3f snr=%4.1f "
+              "dop=%9.3f adr=%13.3f %6.3f\n",U1(p),qi,U1(p+4),prn,frq,flag,
+              U1(p+9),U1(p+10),U1(p+11),U1(p+12),U1(p+13),U1(p+14),U1(p+15),
+              lock1,lock2,ts,snr,dop,adr,
+              adrs[sat-1]==0.0||dop==0.0?0.0:(adr-adrs[sat-1])-dop);
+#endif
+        //adrs[sat-1]=adr;
+        
+        /* check phase lock */
+        if (!(flag&0x20)) continue;
+        
+        raw->obs.data[n].time=time;
+        raw->obs.data[n].sat=sat;
+        raw->obs.data[n].P=tau*CLIGHT;
+        raw->obs.data[n].L=-adr;
+        raw->obs.data[n].D=(float)dop;
+        raw->obs.data[n].SNR=(unsigned char)(snr*4.0);
+        //raw->obs.data[n].code=sys==SYS_CMP?CODE_L1I:CODE_L1C;
+        raw->obs.data[n].LLI=raw->lockt[sat-1][1]>0.0?1:0;
+        raw->lockt[sat-1][1]=0.0;
+        
+//        for (j=1;j<NFREQ+NEXOBS;j++) {
+//            raw->obs.data[n].L[j]=raw->obs.data[n].P[j]=0.0;
+//            raw->obs.data[n].D[j]=0.0;
+//            raw->obs.data[n].SNR[j]=raw->obs.data[n].LLI[j]=0;
+//            raw->obs.data[n].code[j]=CODE_NONE;
+//        }
+        n++;
+    }
+    if (n<=0) return OBS_ERROR;
+    raw->time=time;
+    raw->obs.n=n;
+    return OBS;
+}
+
+
 /* decode gps and qzss navigation data ---------------------------------------*/
 static Error decode_nav(raw_t *raw, int sat, int off)
 {
@@ -285,17 +297,7 @@ Error decode_trksfrbx(raw_t *raw)
 
     return decode_nav(raw,sat,13);    
 }
-/* checksum ------------------------------------------------------------------*/
-static int checksum(unsigned char *buff, int len)
-{
-    unsigned char cka=0,ckb=0;
-    int i;
-    
-    for (i=2;i<len-2;i++) {
-        cka+=buff[i]; ckb+=cka;
-    }
-    return cka==buff[len-2]&&ckb==buff[len-1];
-}
+
 /* decode ublox raw message --------------------------------------------------*/
 static Error decode_ubx(raw_t *raw)
 {

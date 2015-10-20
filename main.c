@@ -358,7 +358,7 @@ void SendStr(const char* str)
 {
 	HAL_UART_Transmit(&UartResultHandle,(unsigned char*)str,strlen(str),1);
 }
-int main()
+int main()//OPTIMIZATION LEVEL = 0
 {
 	HAL_Init();
 	SystemClockConfig();
@@ -370,7 +370,8 @@ int main()
 	ConfigUART(svr.format[0]);
 
 	fobs[0]=fobs[1]=0;
-	//svr.raw[1].time.time = 1429540822;
+	//svr.raw[1].time.time = 1429540822;//test SS2 data
+	//svr.raw[1].time.time = 1429539852;//test SS2 data
 	
 	while (HAL_UART_Receive_DMA(&UartGPSHandle,svr.buff[0],MAX_RAW_LEN) != HAL_OK);	
 	while (HAL_UART_Receive_DMA(&UartRFHandle,svr.buff[1],MAX_RAW_LEN) != HAL_OK);	
@@ -466,16 +467,16 @@ int main()
 	//			if (1)
 				{
 					char* res=result;
-					LED6_TOGGLE;
+					LED5_TOGGLE;
 
 #ifdef TIME_MEASURE
 					t=HAL_GetTick()-start;
 					svr.rtk.sol.processTime = t;	
 #endif					
-					//if (svr.rtk.sol.stat==SOLQ_FLOAT)
-					//	HAL_UART_Transmit_DMA(&UartResultHandle,(unsigned char*)svr.rtk.errbuf,svr.rtk.errLen);
-					//else
-						outsol(res,&svr.rtk.sol,svr.rtk.rb);
+					if (svr.rtk.sol.stat==SOLQ_FIX)
+						LED6_TOGGLE;
+					
+					outsol(res,&svr.rtk.sol,svr.rtk.rb);
 					SendStr(result);
 				}
 				else

@@ -77,9 +77,9 @@
 //	#define MSG_LEN 141
 //#endif
 
-//#define SOLF_ENU 
+#define SOLF_ENU 
 //#define SOLF_ECEF 
-#define SOLF_LLH
+//#define SOLF_LLH
 
 #define SQR(x) (x*x)
 #define sos2(x) (x[0]*x[0]+x[1]*x[1])

@@ -901,6 +901,7 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 	double ep[6];
 	prcopt_t *opt=&rtk->opt;
 	char *errMsg=rtk->errbuf;//MAKE SURE errMsg length is less than MAX_ERRMSG
+	rtk->errLen = 0;
 //	char **msg=&errMsg;
 	for (i=0;i<n;i++)
 	{
@@ -911,13 +912,12 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 	nu=i;//number of rover observations
 	nr=n-nu;
 	time=rtk->sol.time;//previous epoch
-//	time2epoch(time,ep);
-//	if ((ep[4]>=44.0) && (ep[5]>=5.0))
-//	{
-//		errMsg +=sprintf(errMsg,"die");
-//	}
-//	errMsg+=sprintf(errMsg,"nu:%d,nr:%d\n",nu,nr);
-//	rtk->errLen = errMsg-rtk->errbuf;
+/*	time2epoch(time,ep);
+	if ((ep[4]>=6.0) && (ep[5]>=19.0))
+	{
+		errMsg +=sprintf(errMsg,"die");
+	}
+*/
 	
 	//rover standard positioning
 	if (pntpos(obs,nu,nav,&rtk->sol,NULL,rtk->ssat,&rtk->opt,&errMsg))	
