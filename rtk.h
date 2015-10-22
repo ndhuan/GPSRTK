@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define DEBUG_MSG
+//#define _DEBUG_MSG
 
 #define SEC_PER_WEEK 604800
 #define SEC_PER_HALF_WEEK 302400
@@ -77,11 +77,12 @@
 //	#define MSG_LEN 141
 //#endif
 
-#define SOLF_ENU 
+//#define SOLF_ENU 
 //#define SOLF_ECEF 
-//#define SOLF_LLH
+#define SOLF_LLH
 
-#define SQR(x) (x*x)
+#define SQR(x)   ((x)*(x))
+
 #define sos2(x) (x[0]*x[0]+x[1]*x[1])
 #define sos3(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
 #define sos4(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+x[3]*x[3])

@@ -6,9 +6,9 @@
 #include "rtk.h"
 #include "main.h"
 
-#define HOME_POS
+//#define HOME_POS
 //#define KARATE_POS
-//#define A5_POS
+#define A5_POS
 //HOME_POS 10.780175707,106.660899381,31.5523
 //KARATE 10.774332000,106.658716000,13.2000
 #ifdef HOME_POS

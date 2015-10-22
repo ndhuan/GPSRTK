@@ -373,8 +373,10 @@ static int ddres(rtk_t *rtk, const nav_t *nav, double dt, const double *x,
                     rtk->ssat[sat[i]-1].rejc++;
                     rtk->ssat[sat[j]-1].rejc++;
                 }
+#ifdef _DEBUG_MSG								
                 (*msg)+=sprintf(*msg,"outlier rejected (sat=%3d-%3d %s%d v=%.3f)\n",
                        sat[i],sat[j],f<1?"L":"P",f+1,v[nv]);
+#endif								
                 continue;
             }
             /* single-differenced measurement error variances */
@@ -516,7 +518,9 @@ static void holdamb(rtk_t *rtk, const double *xa,char **msg)
         
         /* update states with constraints */
         if ((info=filter(rtk->x,rtk->P,H,v,R,rtk->nx,nv))) {
-            (*msg)+=sprintf(*msg,"filter error (info=%d)\n",info);
+#ifdef _DEBUG_MSG 
+					(*msg)+=sprintf(*msg,"filter error (info=%d)\n",info);
+#endif					
         }
         free(R);
     }
@@ -535,11 +539,15 @@ static int resamb_LAMBDA(rtk_t *rtk, double *bias, double *xa,char **msg)
     D=zeros(nx,nx);
 		if (!D)
 		{
+#ifdef _DEBUG_MSG
 			*msg+=sprintf(*msg,"resamb_LAMBDA mat error1\n");
+#endif			
 			return 0;
 		}
     if ((nb=ddmat(rtk,D,msg))<=0) {
-        *msg+=sprintf(*msg,"no valid double-difference\n");
+#ifdef _DEBUG_MSG
+				*msg+=sprintf(*msg,"no valid double-difference\n");
+#endif			
         free(D);
         return 0;
     }
@@ -547,7 +555,9 @@ static int resamb_LAMBDA(rtk_t *rtk, double *bias, double *xa,char **msg)
     b=mat(nb,2); db=mat(nb,1); Qb=mat(nb,nb); Qab=mat(na,nb); QQ=mat(na,nb);
 		if ((!y)||(!Qy)||(!DP)||(!b)||(!db)||(!Qb)||(!Qab)||(!QQ))
 		{
+#ifdef _DEBUG_MSG
 			*msg+=sprintf(*msg,"resamb_LAMBDA mat error2\n");
+#endif			
 			free(D);free(y);free(Qy);free(DP);free(b);free(db);
 			free(Qb);free(Qab);free(QQ);
 			return 0;
@@ -595,13 +605,17 @@ static int resamb_LAMBDA(rtk_t *rtk, double *bias, double *xa,char **msg)
             else nb=0;
         }
         else { /* validation failed */
-            (*msg)+=sprintf(*msg,"ambiguity validation failed (nb=%d ratio=%.2f s=%.2f/%.2f)\n",
+#ifdef _DEBUG_MSG
+					(*msg)+=sprintf(*msg,"ambiguity validation failed (nb=%d ratio=%.2f s=%.2f/%.2f)\n",
                    nb,s[1]/s[0],s[0],s[1]);
+#endif					
             nb=0;
         }
     }
     else {
-        (*msg)+=sprintf(*msg,"lambda error (info=%d)\n",info);
+#ifdef _DEBUG_MSG 
+				(*msg)+=sprintf(*msg,"lambda error (info=%d)\n",info);
+#endif			
     }
     free(D); free(y); free(Qy); free(DP);
     free(b); free(db); free(Qb); free(Qab); free(QQ);
@@ -629,26 +643,12 @@ static int valpos(rtk_t *rtk, const double *v, const double *R, const int *vflg,
         freq=vflg[i]&0xF;
         stype=type==0?"L":(type==1?"L":"C");
 				//WARNING: msg length may be greater than MAX_ERRMSG
-        //(*msg)+=sprintf(*msg,"large residual (sat=%2d-%2d %s%d v=%6.3f sig=%.3f)\n",
-				//      sat1,sat2,stype,freq+1,v[i],SQRT(R[i+i*nv]));
+#ifdef _DEBUG_MSG
+				(*msg)+=sprintf(*msg,"large residual (sat=%2d-%2d %s%d v=%6.3f sig=%.3f)\n",
+				      sat1,sat2,stype,freq+1,v[i],SQRT(R[i+i*nv]));
+#endif			
     }
-#if 0 /* omitted v.2.4.0 */
-    if (stat&&nv>NP(opt)) {
-        
-        /* chi-square validation */
-        for (i=0;i<nv;i++) vv+=v[i]*v[i]/R[i+i*nv];
-        
-        if (vv>chisqr[nv-NP(opt)-1]) {
-            errmsg(rtk,"residuals validation failed (nv=%d np=%d vv=%.2f cs=%.2f)\n",
-                   nv,NP(opt),vv,chisqr[nv-NP(opt)-1]);
-            stat=0;
-        }
-        else {
-            trace(3,"valpos : validation ok (%s nv=%d np=%d vv=%.2f cs=%.2f)\n",
-                  rtk->tstr,nv,NP(opt),vv,chisqr[nv-NP(opt)-1]);
-        }
-    }
-#endif
+
     return !stat;
 }
 
@@ -670,7 +670,9 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
   azel=zeros(2,n);
 	if ((!rs)||(!dts)||(!var)||(!y)||(!e)||(!azel))
 	{	
+#ifdef _DEBUG_MSG
 		(*msg)+=sprintf(*msg,"relpos mat error 1\n");		
+#endif		
 		free(rs); free(dts); free(var); free(y); free(e); free(azel);
 		return -1;
 	}
@@ -684,15 +686,17 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 	if (zdres(1,obs+nu,nr,rs+nu*6,dts+nu*2,svh+nu,nav,rtk->rb,opt,1,
                y+nu*2,e+nu*3,azel+nu*2)) //*****************************************
 	{
+#ifdef _DEBUG_MSG
     (*msg)+=sprintf(*msg,"initial base station position error\n");
-		
+#endif		
     free(rs); free(dts); free(var); free(y); free(e); free(azel);
     return -1;
 	}//*********************88
 	/* select common satellites between rover and base-station */
   if ((ns=selsat(obs,azel,nu,nr,opt,sat,iu,ir,msg))<=0) {//check!!!!!!!!!!!!!!!*************************************
-		
+#ifdef _DEBUG_MSG		
     (*msg)+=sprintf(*msg,"no common satellite\n");
+#endif		
     free(rs); free(dts); free(var); free(y); free(e); free(azel);
     return -1;
   }
@@ -707,7 +711,9 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 	v=mat(ny,1); H=zeros(rtk->nx,ny); R=mat(ny,ny); bias=mat(rtk->nx,1);
 	if ((!xp)||(!Pp)||(!xa)||(!v)||(!H)||(!R)||(!bias))
 	{	
+#ifdef _DEBUG_MSG
 		(*msg)+=sprintf(*msg,"relpos mat error 2\n");
+#endif		
 		free(rs); free(dts); free(var); free(y); free(e); free(azel);
 		free(xp); free(Pp);  free(xa);  free(v); free(H); free(R); free(bias);
 		return -1;
@@ -717,21 +723,27 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 	for (i=0;i<NITER;i++) {
 		/* undifferenced residuals for rover */
 		if (zdres(0,obs,nu,rs,dts,svh,nav,xp,opt,0,y,e,azel)) {
+#ifdef _DEBUG_MSG
 			(*msg)+=sprintf(*msg,"rover initial position error\n");
+#endif			
 			stat=SOLQ_NONE;
 			break;
 		}
 		//*************************
 		/* double-differenced residuals and partial derivatives */
 		if ((nv=ddres(rtk,nav,dt,xp,Pp,sat,y,e,azel,iu,ir,ns,v,H,R,vflg,msg))<1) {
-			(*msg)+=sprintf(*msg,"no double-differenced residual\n");
+#ifdef _DEBUG_MSG
+		(*msg)+=sprintf(*msg,"no double-differenced residual\n");
+#endif		
 			stat=SOLQ_NONE;
 			break;
 		}
 		/* kalman filter measurement update */
 		matcpy(Pp,rtk->P,rtk->nx,rtk->nx);
 		if ((info=filter(xp,Pp,H,v,R,rtk->nx,nv))) {
+#ifdef _DEBUG_MSG
 			(*msg)+=sprintf(*msg,"filter error (info=%d)\n",info);
+#endif			
 			stat=SOLQ_NONE;
 			break;
 		}
@@ -935,8 +947,10 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
 	}
 	if (nr==0)
 	{
+#ifdef _DEBUG_MSG		
 		errMsg+=sprintf(errMsg,"no base obs data\n");
 		rtk->errLen = errMsg-rtk->errbuf;
+#endif		
 		rtk->sol.stat=SOLQ_SINGLE;
 //		return 0;
 		return -1;
@@ -945,15 +959,18 @@ int rtkpos(rtk_t *rtk,const obsd_t *obs, int n, const nav_t *nav)
   rtk->sol.age=(float)timediff(obs[0].time,obs[nu].time);
   if ((rtk->sol.age>opt->maxtdiff) || (rtk->sol.age<-opt->maxtdiff)) 
 	{
+#ifdef _DEBUG_MSG
     errMsg+=sprintf(errMsg,"age of differential error (age=%.1f)\n",rtk->sol.age);
 		rtk->errLen = errMsg-rtk->errbuf;
+#endif		
 //    rtk->sol.stat=SOLQ_SINGLE;
     return -1;
   }	
 	
 	tmp = relpos(rtk,obs,nu,nr,nav,&errMsg);
+#ifdef _DEBUG_MSG	
 	rtk->errLen = errMsg-(rtk->errbuf);
-	
+#endif	
 	return tmp;	
 	
 }
