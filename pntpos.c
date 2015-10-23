@@ -134,8 +134,10 @@ static int solval(double *v,int nv,char **msg,double *azel,int n, int *vsat,cons
 		tmp=dot(v,v,nv);
 		if (tmp>=chisqr[nv-5])
 		{
+#ifdef _DEBUG_MSG			
 			strcpy(*msg,"chi square test failed\n");
 			(*msg)+=sizeof("chi square test failed\n");
+#endif			
 			return -1;
 		}
 	}
@@ -152,7 +154,9 @@ static int solval(double *v,int nv,char **msg,double *azel,int n, int *vsat,cons
 	dops(ns,azels,opt->elmin,dop);
 	if ((dop[0]<=0)||(dop[0]>opt->maxgdop))
 	{
+#ifdef _DEBUG_MSG
 		(*msg) += sprintf(*msg,"GDOP error:%f,ns %d\n",dop[0],ns);
+#endif		
 		return -1;
 	}
 	return 0;
@@ -191,7 +195,9 @@ static int estpos(const obsd_t *obs, const nav_t *nav,int n, const int* svh,doub
 	H=mat(4,n);v=mat(n,1);var=mat(n,1);
 	if ((!H)||(!v)||(!var))
 	{
+#ifdef _DEBUG_MSG
 		*msg+=sprintf(*msg,"estpos mat allocate error");
+#endif		
 		free(H);free(v);free(var);
 		return -1;
 	}
@@ -215,7 +221,9 @@ static int estpos(const obsd_t *obs, const nav_t *nav,int n, const int* svh,doub
 //		}
 		if (nv<4)
 		{
+#ifdef _DEBUG_MSG
 			(*msg)+=sprintf(*msg,"lack of valid sat:%d\n",nv);
+#endif			
 			free(H);free(v);free(var);
 //			for (j=0;j<nv;j++)	
 //				msg+=sprintf(msg,"%f %f %f %f\n",H[j*4],H[j*4+1],H[j*4+2],v[j]);			
@@ -241,7 +249,9 @@ static int estpos(const obsd_t *obs, const nav_t *nav,int n, const int* svh,doub
 		//start = TIM2->CNT;
 		if (lsq(H,v,4,nv,dx,Q))
 		{
+#ifdef _DEBUG_MSG
 			*msg += sprintf(*msg,"lsq error\n");
+#endif			
 			free(H);free(v);free(var);
 //			(*msg) += sizeof("lsq error\n");
 			return -1;
@@ -285,7 +295,9 @@ static int estpos(const obsd_t *obs, const nav_t *nav,int n, const int* svh,doub
 	}
 	if (i>=MAXITR)
 	{
+#ifdef _DEBUG_MSG
 		*msg+=sprintf(*msg,"estpos diverged\n");
+#endif		
 //		(*msg) += sizeof("estpos diverged\n");
 		
 	}
@@ -304,7 +316,9 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol,
 	
 	if (n<=0)
 	{
+#ifdef _DEBUG_MSG		
 		*msg += sprintf(*msg,"no obs data\n");
+#endif		
 		//(*msg) += sizeof("no obs data\n");
 		return 1;
 	}
