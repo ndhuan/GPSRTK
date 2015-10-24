@@ -82,7 +82,7 @@ void updatesvr(rtksvr_t* svr,Error Err, int index)
 			obs =&svr->raw[index].obs;
 			svrobs = svr->obs+index;
 			svrobs->n=0;
-			for (i=0;i<obs->n;i++)
+			for (i=0;(i<obs->n)&&(i<(MAX_OBS>>1));i++)
 			{
 				svrobs->data[svrobs->n]=obs->data[i];
 				svrobs->data[(svrobs->n)++].rcv=index+1;
