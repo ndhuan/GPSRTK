@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <time.h>
 
-#define DEBUG_MSG
+//#define _DEBUG_MSG
 
 #define SEC_PER_WEEK 604800
 #define SEC_PER_HALF_WEEK 302400
@@ -54,9 +54,11 @@
 #define P2_55       2.775557561562891E-17 /* 2^-55 */
 
 #define MAX_SAT 32
+
 #define MAX_RAW_LEN 3000
 #define MAX_ERRMSG 1000
 #define MAX_OBS 20//max observation per epoch (rover+base)
+
 #define MAXDTOE 7200.0
 #define MAX_SOL_BUF 5
 #define MAXSTRPATH  100                /* max length of stream path */
@@ -82,6 +84,7 @@
 #define SOLF_LLH
 
 #define SQR(x)   ((x)*(x))
+
 #define sos2(x) (x[0]*x[0]+x[1]*x[1])
 #define sos3(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
 #define sos4(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+x[3]*x[3])

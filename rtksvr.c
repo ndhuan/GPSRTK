@@ -77,7 +77,7 @@ void updatesvr(rtksvr_t* svr,Error Err, int index)
 	
 	switch(Err)
 	{
-		case (OBS)://tai sao nhet vao svr->obs chi, nhet thang vo obsd trong main luon???????????????????????????
+		case (OBS):
 		{
 			obs =&svr->raw[index].obs;
 			svrobs = svr->obs+index;

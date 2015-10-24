@@ -467,7 +467,7 @@ int main()//OPTIMIZATION LEVEL = 0
 				if (!rtkpos(&svr.rtk,obsd,i+temp,&svr.nav))
 	//			if (1)
 				{
-					
+
 					LED5_TOGGLE;
 
 #ifdef TIME_MEASURE
