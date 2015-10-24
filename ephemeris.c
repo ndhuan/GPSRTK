@@ -1,7 +1,7 @@
 #include <math.h>
 #include "rtk.h"
 #include "main.h"
-#define SQR(x)   ((x)*(x))
+
 #define STD_BRDCCLK 30.0          /* error of broadcast clock (m) */
 /* variance by ura ephemeris (ref [1] 20.3.3.3.1.1) --------------------------*/
 static double var_uraeph(int ura)

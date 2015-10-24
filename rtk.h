@@ -55,8 +55,8 @@
 
 #define MAX_SAT 32
 #define MAX_RAW_LEN 3000
-#define MAX_ERRMSG 500
-#define MAX_OBS 24//max observation per epoch (rover+base)
+#define MAX_ERRMSG 1000
+#define MAX_OBS 20//max observation per epoch (rover+base)
 #define MAXDTOE 7200.0
 #define MAX_SOL_BUF 5
 #define MAXSTRPATH  100                /* max length of stream path */
@@ -81,7 +81,7 @@
 //#define SOLF_ECEF 
 #define SOLF_LLH
 
-#define SQR(x) (x*x)
+#define SQR(x)   ((x)*(x))
 #define sos2(x) (x[0]*x[0]+x[1]*x[1])
 #define sos3(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2])
 #define sos4(x) (x[0]*x[0]+x[1]*x[1]+x[2]*x[2]+x[3]*x[3])
@@ -483,7 +483,7 @@ typedef struct{
 	int neb;//bytes in error msg buffer
 	char errbuf[MAX_ERRMSG];//error msg buffer
 	int errLen;
-	const prcopt_t *opt;
+	prcopt_t opt;
 }rtk_t;
 typedef struct {        /* stream type */
     int type;           /* type (STR_???) */

@@ -3,18 +3,18 @@
 
 #define TIMER_FREQ_HZ 5
 
-TIM_HandleTypeDef TimerHandle;// __attribute__((section("CCM_DATA")));
-UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle;// __attribute__((section("CCM_DATA")));
+TIM_HandleTypeDef TimerHandle;
+UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle;
 
-TIM_IC_InitTypeDef sConfig;// __attribute__((section("CCM_DATA")));
-TIM_SlaveConfigTypeDef sSlaveConfig;// __attribute__((section("CCM_DATA")));
+TIM_IC_InitTypeDef sConfig;
+TIM_SlaveConfigTypeDef sSlaveConfig;
 
 //static rtksvr_t svr __attribute__((section(".noinit")));
 static char result[SOL_MSG_LEN] __attribute__((section("IRAM1")));
 static rtksvr_t svr __attribute__((section("IRAM1")));
-static obsd_t obsd[2*MAX_SAT];// __attribute__((section("IRAM2")));
+static obsd_t obsd[2*MAX_SAT] __attribute__((section("IRAM2")));
 static volatile bool flagTimeout=0;
-static int fobs[2];// __attribute__((section("CCM_DATA")));
+static int fobs[2];
 static volatile Error RError=INCOMPLETE;//rover data error
 static volatile Error BError=INCOMPLETE;//base data error
 
@@ -358,7 +358,7 @@ void SendStr(const char* str)
 {
 	HAL_UART_Transmit(&UartResultHandle,(unsigned char*)str,strlen(str),1);
 }
-int main()
+int main()//OPTIMIZATION LEVEL = 0
 {
 	HAL_Init();
 	SystemClockConfig();
@@ -370,15 +370,14 @@ int main()
 	ConfigUART(svr.format[0]);
 
 	fobs[0]=fobs[1]=0;
-	svr.raw[1].time.time = 1429540822;
+	//svr.raw[1].time.time = 1429540822;//test SS2 data
+	//svr.raw[1].time.time = 1429539852;//test SS2 data
 	
 	while (HAL_UART_Receive_DMA(&UartGPSHandle,svr.buff[0],MAX_RAW_LEN) != HAL_OK);	
 	while (HAL_UART_Receive_DMA(&UartRFHandle,svr.buff[1],MAX_RAW_LEN) != HAL_OK);	
 
 	HAL_Delay(3000);
 	sendRequest(svr.format[0]);
-
-	
 	
 //	test();
 
@@ -468,16 +467,16 @@ int main()
 	//			if (1)
 				{
 					char* res=result;
-					LED6_TOGGLE;
+					LED5_TOGGLE;
 
 #ifdef TIME_MEASURE
 					t=HAL_GetTick()-start;
 					svr.rtk.sol.processTime = t;	
 #endif					
-					if (svr.rtk.sol.stat==SOLQ_FLOAT)
-						HAL_UART_Transmit_DMA(&UartResultHandle,(unsigned char*)svr.rtk.errbuf,svr.rtk.errLen);
-					else
-						outsol(res,&svr.rtk.sol,svr.rtk.rb);
+					if (svr.rtk.sol.stat==SOLQ_FIX)
+						LED6_TOGGLE;
+					
+					outsol(res,&svr.rtk.sol,svr.rtk.rb);
 					SendStr(result);
 				}
 				else

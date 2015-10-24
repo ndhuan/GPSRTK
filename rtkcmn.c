@@ -6,9 +6,9 @@
 #include "rtk.h"
 #include "main.h"
 
-#define HOME_POS
+//#define HOME_POS
 //#define KARATE_POS
-//#define A5_POS
+#define A5_POS
 //HOME_POS 10.780175707,106.660899381,31.5523
 //KARATE 10.774332000,106.658716000,13.2000
 #ifdef HOME_POS
@@ -28,8 +28,8 @@ const prcopt_t default_opt={ /* defaults processing options */
     {3.0,0.9999,0.20},          /* thresar */
     0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
     30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
-    {0},{0},{10.780175707,106.660899381,31.5523}                /* baseline,ru,rb */
-
+    {0},{0},{10.780175707,106.660899381,31.5523}//ublox m8n                /* baseline,ru,rb */
+		//{0},{0},{10.7802305556,106.6609138889,31.5523}//google earth
 //    {"",""},                    /* anttype */
 //    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
 };
@@ -52,8 +52,9 @@ const prcopt_t default_opt={ /* defaults processing options */
     0.0,0.0,0.05,               /* elmaskar,almaskhold,thresslip */
     30.0,30.0,30.0,             /* maxtdif,maxinno,maxgdop */
                  /* baseline,ru,rb */
-		 {0},{0},{10.772931,106.659753,15.330}//san A5
-
+//		 {0},{0},{10.772931,106.659753,15.330}//san A5
+		//{0},{0},{10.7728638889,106.6597277778,15.330}//google earth
+		{0},{0},{10.77282222,106.659775000,15.330}
 //    {"",""},                    /* anttype */
 //    {{0}},{{0}},{0}             /* antdel,pcv,exsats */
 };
@@ -394,10 +395,10 @@ extern int matinv(double *A, int n)
 		if (!indx || !B)
 		{
 			free(indx);free(B);
-			return -9;
+			return -1;
 		}
 		matcpy(B,A,n,n);
-    if (ludcmp(B,n,indx,&d)) {free(indx); free(B); return -8;}
+    if (ludcmp(B,n,indx,&d)) {free(indx); free(B); return -2;}
     for (j=0;j<n;j++) {
         for (i=0;i<n;i++) A[i+j*n]=0.0; A[j+j*n]=1.0;
         lubksb(B,n,indx,A+j*n);
@@ -422,7 +423,7 @@ extern int solve(const char *tr, const double *A, const double *Y, int n,
     double *B=mat(n,n);
     int info;
     if (!B)
-			return -10;
+			return -1;
     matcpy(B,A,n,n);
     if (!(info=matinv(B,n))) matmul(tr[0]=='N'?"NN":"TN",n,m,n,1.0,B,Y,0.0,X);
     free(B);

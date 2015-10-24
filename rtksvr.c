@@ -2,7 +2,7 @@
 #include "main.h"
 #include "rtk.h"
 
-//static eph_t eph[2*MAX_SAT];
+static eph_t eph[2*MAX_SAT];
 static eph_t REph[MAX_SAT];
 static eph_t BEph[MAX_SAT];
 //static alm_t Ralm[MAX_SAT];
@@ -38,8 +38,8 @@ void rtksvrstart(rtksvr_t* svr)
 	svr->obs[0].n=0;
 	svr->obs[1].n=0;
 	
-	svr->nav.eph =(eph_t  *)malloc(sizeof(eph_t )*MAX_SAT *2);
-		//svr->nav.eph = eph;
+//	svr->nav.eph =(eph_t  *)malloc(sizeof(eph_t )*MAX_SAT *2);
+		svr->nav.eph = eph;
 	
 	for (i=0;i<2*MAX_SAT;i++)
 	{
@@ -50,10 +50,10 @@ void rtksvrstart(rtksvr_t* svr)
 	
 	svr->nav.n = 2*MAX_SAT;
 	
-	//svr->format[0] = STRFMT_UBX;//rover
-	//svr->format[1] = STRFMT_UBX;//base
-	svr->format[0] = STRFMT_SS2;
-	svr->format[1] = STRFMT_SS2;
+	svr->format[0] = STRFMT_UBX;//rover
+	svr->format[1] = STRFMT_UBX;//base
+	//svr->format[0] = STRFMT_SS2;
+	//svr->format[1] = STRFMT_SS2;
 }
 /* -- void updatesvr(rtksvr_t* svr,Error Err, int index) --------------------------------------
  * 

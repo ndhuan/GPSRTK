@@ -80,20 +80,20 @@ static void rescode(const obsd_t *obs, const nav_t *nav,const int *svh,
 		azel[i*2]=azel[i*2+1]=resp[i]=0.0;
 		if (svh[i])//unhealthy satellite
 		{			
-			**msg='s';
-			(*msg)++;
+			//**msg='s';
+			//(*msg)++;
 			continue;			
 		}
 		if ((r=geodist(rs+i*6,x,e))<=0) 
 		{						
-			**msg='r';
-			(*msg)++;
+			//**msg='r';
+			//(*msg)++;
 			continue;
 		}
 		if (satazel(pos,e,azel+i*2)<opt->elmin)
 		{			
-			**msg='a';
-			(*msg)++;
+			//**msg='a';
+			//(*msg)++;
 			continue;
 		}
 		//pseudorange (group delay correction)
