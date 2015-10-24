@@ -3,12 +3,16 @@
 #include "rtk.h"
 
 static eph_t eph[2*MAX_SAT];
-static eph_t REph[MAX_SAT];
+static eph_t REph[MAX_SAT] __attribute__((section("IRAM2")));
 static eph_t BEph[MAX_SAT];
 //static alm_t Ralm[MAX_SAT];
 //static alm_t Balm[MAX_SAT];
 //static obsd_t RObsData[MAX_OBS] ;
 //static obsd_t BObsData[MAX_OBS];
+
+static char result[SOL_MSG_LEN];// __attribute__((section("IRAM1")));
+static uint8_t roverBuff[MAX_RAW_LEN];// __attribute__((section("IRAM1")));
+static uint8_t baseBuff[MAX_RAW_LEN];// __attribute__((section("IRAM1")));
 
 /* -- void rtksvrstart(rtksvr_t* svr) --------------------------------------
  * 
@@ -24,11 +28,13 @@ void rtksvrstart(rtksvr_t* svr)
 	gtime_t time0={0};
 
 	rtkinit(&svr->rtk,&default_opt);//base position is set here
-
+	
+	svr->buff[0] = roverBuff;
+	svr->buff[1] = baseBuff;
 	svr->nb[0]=svr->nb[1]=0;
 	svr->buffPtr[0]=svr->buffPtr[1]=0;
 	
-//	svr->solbuf = sol0;	
+	svr->rtk.sol.result = result;
 		
 	init_raw(svr->raw,REph);
 	init_raw(svr->raw+1,BEph);	

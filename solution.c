@@ -11,7 +11,7 @@ static double sqvar(double covar)
 {
     return covar<0.0?-sqrt(-covar):sqrt(covar);
 }
-extern void outsol(char* res, const sol_t *sol, const double *rb)
+extern void outsol(const sol_t *sol, const double *rb)
 {
 	gtime_t time; 
 	double ep[6],pos[3],Qecef[9],Qenu[9];
@@ -19,7 +19,7 @@ extern void outsol(char* res, const sol_t *sol, const double *rb)
 	double e[3],enu[3],rr[3],eQ[9];
 	int i=0;
 #endif	
-	
+	char *res = sol->result;
 	time=sol->time;
 	time2epoch(time,ep);
 	

@@ -442,6 +442,7 @@ typedef struct{
 	float ratio;//for validation
 	int processTime;
 	int encoder;
+	char *result;
 }sol_t;
 typedef struct{
 	uint8_t vs;//valid sat flag
@@ -502,7 +503,7 @@ typedef struct{
 	rtk_t rtk;
 	int nb[2];
 	int buffPtr[2];//buffer pointer
-	uint8_t buff[2][MAX_RAW_LEN];//input buffers 
+	uint8_t* buff[2];//input buffers 
 //	uint8_t sbuff[100];//solution buffer
 //	sol_t solbuf;
 	raw_t raw[2];
@@ -576,7 +577,7 @@ extern int pntpos(const obsd_t *obs, int n, const nav_t *nav, sol_t *sol,
 extern void satposs(gtime_t teph,const obsd_t *obs,int n,const nav_t *nav,
 		double *rs, double *dts, double *var, int *svh,char **msg);
 //solution.c
-extern void outsol(char* res,const sol_t *sol, const double *rb);
+extern void outsol(const sol_t *sol, const double *rb);
 //SuperStarII.c
 extern Error input_ss2(raw_t* raw, uint8_t data);
 //ublox

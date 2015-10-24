@@ -10,9 +10,9 @@ TIM_IC_InitTypeDef sConfig;
 TIM_SlaveConfigTypeDef sSlaveConfig;
 
 //static rtksvr_t svr __attribute__((section(".noinit")));
-static char result[SOL_MSG_LEN] __attribute__((section("IRAM1")));
-static rtksvr_t svr __attribute__((section("IRAM1")));
 static obsd_t obsd[2*MAX_SAT] __attribute__((section("IRAM2")));
+static rtksvr_t svr __attribute__((section("IRAM2")));
+
 static volatile bool flagTimeout=0;
 static int fobs[2];
 static volatile Error RError=INCOMPLETE;//rover data error
@@ -370,6 +370,7 @@ int main()//OPTIMIZATION LEVEL = 0
 	ConfigUART(svr.format[0]);
 
 	fobs[0]=fobs[1]=0;
+
 	//svr.raw[1].time.time = 1429540822;//test SS2 data
 	//svr.raw[1].time.time = 1429539852;//test SS2 data
 	
@@ -466,7 +467,7 @@ int main()//OPTIMIZATION LEVEL = 0
 				if (!rtkpos(&svr.rtk,obsd,i+temp,&svr.nav))
 	//			if (1)
 				{
-					char* res=result;
+					
 					LED5_TOGGLE;
 
 #ifdef TIME_MEASURE
@@ -476,8 +477,8 @@ int main()//OPTIMIZATION LEVEL = 0
 					if (svr.rtk.sol.stat==SOLQ_FIX)
 						LED6_TOGGLE;
 					
-					outsol(res,&svr.rtk.sol,svr.rtk.rb);
-					SendStr(result);
+					outsol(&svr.rtk.sol,svr.rtk.rb);
+					SendStr(svr.rtk.sol.result);
 				}
 				else
 				{
