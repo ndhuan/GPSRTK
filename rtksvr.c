@@ -2,8 +2,8 @@
 #include "main.h"
 #include "rtk.h"
 
-static eph_t eph[2*MAX_SAT];
-static eph_t REph[MAX_SAT] __attribute__((section("IRAM2")));
+static eph_t eph[2*MAX_SAT] __attribute__((section("IRAM2")));
+static eph_t REph[MAX_SAT];
 static eph_t BEph[MAX_SAT];
 //static alm_t Ralm[MAX_SAT];
 //static alm_t Balm[MAX_SAT];

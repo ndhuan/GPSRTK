@@ -10,7 +10,7 @@ TIM_IC_InitTypeDef sConfig;
 TIM_SlaveConfigTypeDef sSlaveConfig;
 
 //static rtksvr_t svr __attribute__((section(".noinit")));
-static obsd_t obsd[2*MAX_SAT] __attribute__((section("IRAM2")));
+static obsd_t obsd[2*MAX_SAT];
 static rtksvr_t svr __attribute__((section("IRAM2")));
 
 static volatile bool flagTimeout=0;
@@ -147,7 +147,7 @@ void ConfigUART(int baseFormat)
 	HAL_UART_Init(&UartRFHandle);	
 	
 	UartResultHandle.Instance        = UART_RESULT;
-  UartResultHandle.Init.BaudRate   = 230400;
+  UartResultHandle.Init.BaudRate   = 115200;
   UartResultHandle.Init.WordLength = UART_WORDLENGTH_8B;
   UartResultHandle.Init.StopBits   = UART_STOPBITS_1;
   UartResultHandle.Init.Parity     = UART_PARITY_NONE;
@@ -356,7 +356,7 @@ void SendIntStr(int num)
 }
 void SendStr(const char* str)
 {
-	HAL_UART_Transmit(&UartResultHandle,(unsigned char*)str,strlen(str),1);
+	HAL_UART_Transmit_DMA(&UartResultHandle,(unsigned char*)str,strlen(str));
 }
 int main()//OPTIMIZATION LEVEL = 0
 {
@@ -387,6 +387,7 @@ int main()//OPTIMIZATION LEVEL = 0
 		
 		if (flagTimeout)
 		{
+
 			int index,temp;
 			flagTimeout=0;
 			//SendIntStr(UartGPSHandle.Instance->SR);
@@ -486,7 +487,28 @@ int main()//OPTIMIZATION LEVEL = 0
 				}
 			}
 		}
+		
+
+	
+/*		if (flagTimeout)
+		{
+			char* res = svr.rtk.sol.result;
+			flagTimeout = 0;
+			
+			res+=sprintf(res,
+			"%04.0f/%02.0f/%02.0f %02.0f:%02.0f:%06.3f %14.9f %14.9f %10.4f %3d %3d %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %6.2f %6.1f",
+			2015.0,10.0,12.0,3.0,45.0,18.0,//time yy/mm/dd hh:mm:ss.ssss
+			1.0*R2D,1.0*R2D,1.0,
+			1,1,
+			1.0,1.0,1.0,
+			1.0,1.0,1.0,
+			1.0,1.0);
+			res[0]='\n';
+			SendStr(svr.rtk.sol.result);
+		}
+*/		
 	}
+	
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)

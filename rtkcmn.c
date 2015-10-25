@@ -37,7 +37,7 @@ const prcopt_t default_opt={ /* defaults processing options */
 #ifdef A5_POS
 const prcopt_t default_opt={ /* defaults processing options */
     PMODE_KINEMA,0,1,SYS_GPS,   /* mode,soltype,nf,navsys */
-    20.0*D2R,           /* elmin*/
+    15.0*D2R,           /* elmin*/
 		{{0,0},{0.0,30.0,40.0,40.0,40.0,40.0,40.0,40.0,40.0}},						/* SNR mask*/
     0,ARMODE_FIXHOLD,1,5,0,10,               /* sateph,modear,glomodear,maxout,minlock,minfix */
     IONOOPT_BRDC,TROPOPT_SAAS,0,0,                    /* estion,esttrop,dynamics,tidecorr */

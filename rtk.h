@@ -79,9 +79,9 @@
 //	#define MSG_LEN 141
 //#endif
 
-//#define SOLF_ENU 
+#define SOLF_ENU 
 //#define SOLF_ECEF 
-#define SOLF_LLH
+//#define SOLF_LLH
 
 #define SQR(x)   ((x)*(x))
 
@@ -477,9 +477,9 @@ typedef struct{
 	double rb[6];//base position/velocity (ecef) (m,m/s)
 	int nx, na;//number of float states/fixed states
 	double tt;//time difference between current and previous
-	double x[41], P[41*41];//float states and their cov
+	double x[35], P[35*35];//float states and their cov
 	//float state:pos(3),vel(3),acc(3),sat(32)
-	double xa[9], Pa[81];//fixed stated and their cov
+	double xa[3], Pa[9];//fixed stated and their cov
 	//fix state:pos(3),vel(3),acc(3)
 	int nfix;//number of continuous fixes of ambiguity
 	ambc_t ambc[MAX_SAT];
