@@ -404,7 +404,7 @@ typedef struct{
 	int n,nmax;//number of broadcast ephemeris
 //	int na, namax;//number of almanac data
 	eph_t* eph;
-	erp_t erp;//earth rotation param
+//	erp_t erp;//earth rotation param
 //	alm_t *alm;         /* almanac data */
 	double utc_gps[4];//GPS delta-UTC params {A0, A1, T, W}
 	double ion_gps[8];//GPS iono model params {a0-a3,b0-b3}
@@ -482,7 +482,7 @@ typedef struct{
 	double xa[3], Pa[9];//fixed stated and their cov
 	//fix state:pos(3),vel(3),acc(3)
 	int nfix;//number of continuous fixes of ambiguity
-	ambc_t ambc[MAX_SAT];
+	//ambc_t ambc[MAX_SAT];
 	ssat_t ssat[MAX_SAT];
 	int neb;//bytes in error msg buffer
 	char errbuf[MAX_ERRMSG];//error msg buffer

@@ -4,15 +4,15 @@
 
 static eph_t eph[2*MAX_SAT] __attribute__((section("IRAM2")));
 static eph_t REph[MAX_SAT];
-static eph_t BEph[MAX_SAT];
+//static eph_t BEph[MAX_SAT];
 //static alm_t Ralm[MAX_SAT];
 //static alm_t Balm[MAX_SAT];
 //static obsd_t RObsData[MAX_OBS] ;
 //static obsd_t BObsData[MAX_OBS];
 
-static char result[SOL_MSG_LEN];// __attribute__((section("IRAM1")));
-static uint8_t roverBuff[MAX_RAW_LEN];// __attribute__((section("IRAM1")));
-static uint8_t baseBuff[MAX_RAW_LEN];// __attribute__((section("IRAM1")));
+static char result[SOL_MSG_LEN] __attribute__((section("IRAM1")));
+static uint8_t roverBuff[MAX_RAW_LEN] __attribute__((section("IRAM1")));
+static uint8_t baseBuff[MAX_RAW_LEN] __attribute__((section("IRAM1")));
 
 /* -- void rtksvrstart(rtksvr_t* svr) --------------------------------------
  * 
@@ -37,7 +37,7 @@ void rtksvrstart(rtksvr_t* svr)
 	svr->rtk.sol.result = result;
 		
 	init_raw(svr->raw,REph);
-	init_raw(svr->raw+1,BEph);	
+	init_raw(svr->raw+1,NULL);	
 	
 	svr->ftime = time0;	
 	
@@ -45,7 +45,7 @@ void rtksvrstart(rtksvr_t* svr)
 	svr->obs[1].n=0;
 	
 //	svr->nav.eph =(eph_t  *)malloc(sizeof(eph_t )*MAX_SAT *2);
-		svr->nav.eph = eph;
+	svr->nav.eph = eph;
 	
 	for (i=0;i<2*MAX_SAT;i++)
 	{

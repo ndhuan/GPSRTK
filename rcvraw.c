@@ -199,13 +199,15 @@ void init_raw(raw_t* raw,eph_t *eph)
 	{
 		raw->obs.data[i]=data0;
 	}
-
-	for (i=0;i<MAX_SAT;i++)
+	if (eph!=NULL)
 	{
-		eph[i]=eph0;
-		//alm[i]=alm0;
+		for (i=0;i<MAX_SAT;i++)
+		{
+			eph[i]=eph0;
+			//alm[i]=alm0;			
+		}
+		raw->nav.eph = eph;
 	}
-	raw->nav.eph = eph;
 	//raw->nav.alm = alm;
 	raw->nav.n = MAX_SAT;
 	raw->ephsat = 0;

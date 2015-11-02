@@ -5,8 +5,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 {
 	if (huart->Instance == UART4)//Result
 	{
-		static GPIO_InitTypeDef GPIOInitStruct;//MUST have "static"
-		static DMA_HandleTypeDef hdma_tx;
+		static GPIO_InitTypeDef GPIOInitStruct __attribute__((section("IRAM2")));//MUST have "static"
+		static DMA_HandleTypeDef hdma_tx __attribute__((section("IRAM2")));
 		__DMA1_CLK_ENABLE();		
 		__GPIOC_CLK_ENABLE();
 		__UART4_CLK_ENABLE();
@@ -47,8 +47,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 	}
 	else 	if (huart->Instance == USART2)//rover
 	{
-		static GPIO_InitTypeDef GPIOInitStruct;//MUST have "static"
-		static DMA_HandleTypeDef hdma_rx;
+		static GPIO_InitTypeDef GPIOInitStruct __attribute__((section("IRAM2")));//MUST have "static"
+		static DMA_HandleTypeDef hdma_rx __attribute__((section("IRAM2")));
 		
 		__GPIOA_CLK_ENABLE();
 		__USART2_CLK_ENABLE();
@@ -87,8 +87,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 	}
 	else if (huart->Instance == USART1)
 	{
-		static GPIO_InitTypeDef GPIOInitStruct;//MUST have "static"
-		static DMA_HandleTypeDef hdma_rx;
+		static GPIO_InitTypeDef GPIOInitStruct __attribute__((section("IRAM2")));//MUST have "static"
+		static DMA_HandleTypeDef hdma_rx __attribute__((section("IRAM2")));
 		__GPIOB_CLK_ENABLE();
 		__USART1_CLK_ENABLE();
 		__DMA2_CLK_ENABLE();
@@ -126,8 +126,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart)
 	}
 	else if (huart->Instance == USART6)//RF
 	{
-		static GPIO_InitTypeDef GPIOInitStruct;//MUST have "static"
-		static DMA_HandleTypeDef hdma_rx2;
+		static GPIO_InitTypeDef GPIOInitStruct __attribute__((section("IRAM2")));//MUST have "static"
+		static DMA_HandleTypeDef hdma_rx2 __attribute__((section("IRAM2")));
 		__GPIOC_CLK_ENABLE();
 		__USART6_CLK_ENABLE();
 		__DMA2_CLK_ENABLE();

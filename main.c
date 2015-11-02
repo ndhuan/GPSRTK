@@ -3,14 +3,14 @@
 
 #define TIMER_FREQ_HZ 5
 
-TIM_HandleTypeDef TimerHandle;
-UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle;
+TIM_HandleTypeDef TimerHandle __attribute__((section("IRAM2")));
+UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle __attribute__((section("IRAM2")));
 
-TIM_IC_InitTypeDef sConfig;
-TIM_SlaveConfigTypeDef sSlaveConfig;
+TIM_IC_InitTypeDef sConfig __attribute__((section("IRAM2")));
+TIM_SlaveConfigTypeDef sSlaveConfig __attribute__((section("IRAM2")));
 
 //static rtksvr_t svr __attribute__((section(".noinit")));
-static obsd_t obsd[2*MAX_SAT];
+static obsd_t obsd[2*MAX_SAT] __attribute__((section("IRAM2")));
 static rtksvr_t svr __attribute__((section("IRAM2")));
 
 static volatile bool flagTimeout=0;
