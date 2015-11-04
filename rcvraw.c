@@ -226,5 +226,8 @@ void init_raw(raw_t* raw,eph_t *eph)
 
 	for (i=0;i<MAX_RAW_LEN;i++)
 		raw->buff[i] = 0;
-	
+		   
+  raw->receive_time=0.0;
+  raw->plen=raw->pbyte=raw->page=raw->reply=0;
+  raw->week=0;
 }

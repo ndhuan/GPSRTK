@@ -845,7 +845,7 @@ static int relpos(rtk_t *rtk, const obsd_t *obs, int nu, int nr,
 void rtkinit(rtk_t *rtk,const prcopt_t *opt)
 {
 	gtime_t time0={0};
-	ambc_t ambc0={{0}};
+	//ambc_t ambc0={{0}};
 	ssat_t ssat0;
 	double *x0=rtk->x;
 	double *P0=rtk->P;
@@ -899,7 +899,7 @@ void rtkinit(rtk_t *rtk,const prcopt_t *opt)
 	rtk->nfix=rtk->neb=0;
 	for (i=0;i<MAX_SAT;i++)
 	{
-		rtk->ambc[i]=ambc0;
+		//rtk->ambc[i]=ambc0;
 		rtk->ssat[i]=ssat0;
 	}
 	for (i=0;i<MAX_ERRMSG;i++)

@@ -404,7 +404,7 @@ typedef struct{
 	int n,nmax;//number of broadcast ephemeris
 //	int na, namax;//number of almanac data
 	eph_t* eph;
-	erp_t erp;//earth rotation param
+	//erp_t erp;//earth rotation param
 //	alm_t *alm;         /* almanac data */
 	double utc_gps[4];//GPS delta-UTC params {A0, A1, T, W}
 	double ion_gps[8];//GPS iono model params {a0-a3,b0-b3}
@@ -429,7 +429,14 @@ typedef struct
 	int iod;	//issue of data
 	int tod;	//time of day (ms)
 	int flag; //general purpose flag
-	uint8_t buff[MAX_RAW_LEN];		
+	uint8_t buff[MAX_RAW_LEN];
+  double receive_time;/* RT17: Reiceve time of week for week rollover detection */
+  unsigned int plen;  /* RT17: Total size of packet to be read */
+  unsigned int pbyte; /* RT17: How many packet bytes have been read so far */
+  unsigned int page;  /* RT17: Last page number */
+  unsigned int reply; /* RT17: Current reply number */
+  int week;           /* RT17: week number */
+  unsigned char pbuff[255+4+2]; /* RT17: Packet buffer */	
 }raw_t;
 typedef struct{
 	gtime_t time;
@@ -482,7 +489,7 @@ typedef struct{
 	double xa[3], Pa[9];//fixed stated and their cov
 	//fix state:pos(3),vel(3),acc(3)
 	int nfix;//number of continuous fixes of ambiguity
-	ambc_t ambc[MAX_SAT];
+	//ambc_t ambc[MAX_SAT];
 	ssat_t ssat[MAX_SAT];
 	int neb;//bytes in error msg buffer
 	char errbuf[MAX_ERRMSG];//error msg buffer
@@ -585,6 +592,8 @@ extern void outsol(const sol_t *sol, const double *rb);
 extern Error input_ss2(raw_t* raw, uint8_t data);
 //ublox
 extern Error input_ubx(raw_t* raw, uint8_t data);
+//trimble
+extern Error input_rt17(raw_t *raw, unsigned char data);
 //lambda.c
 extern int lambda(int n, int m, const double *a, const double *Q, double *f,
                   double *s);

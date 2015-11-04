@@ -3,20 +3,19 @@
 
 #define TIMER_FREQ_HZ 5
 
-TIM_HandleTypeDef TimerHandle;
-UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle;
+TIM_HandleTypeDef TimerHandle __attribute__((section("IRAM2")));
+UART_HandleTypeDef UartGPSHandle, UartRFHandle, UartResultHandle __attribute__((section("IRAM2")));;
 
-TIM_IC_InitTypeDef sConfig;
-TIM_SlaveConfigTypeDef sSlaveConfig;
+TIM_IC_InitTypeDef sConfig __attribute__((section("IRAM2")));
+TIM_SlaveConfigTypeDef sSlaveConfig __attribute__((section("IRAM2")));
 
-//static rtksvr_t svr __attribute__((section(".noinit")));
 static obsd_t obsd[2*MAX_SAT];
 static rtksvr_t svr __attribute__((section("IRAM2")));
 
-static volatile bool flagTimeout=0;
-static int fobs[2];
-static volatile Error RError=INCOMPLETE;//rover data error
-static volatile Error BError=INCOMPLETE;//base data error
+static volatile bool flagTimeout __attribute__((section("IRAM2")));
+static int fobs[2] __attribute__((section("IRAM2")));
+static volatile Error RError __attribute__((section("IRAM2")));//rover data error
+static volatile Error BError __attribute__((section("IRAM2")));//base data error
 
 void SendStr(const char* str);
 void SendIntStr(int num);
@@ -370,7 +369,9 @@ int main()//OPTIMIZATION LEVEL = 0
 	ConfigUART(svr.format[0]);
 
 	fobs[0]=fobs[1]=0;
-
+	flagTimeout = 0;
+	RError=INCOMPLETE;
+	BError=INCOMPLETE;
 	//svr.raw[1].time.time = 1429540822;//test SS2 data
 	//svr.raw[1].time.time = 1429539852;//test SS2 data
 	
