@@ -4,7 +4,7 @@
 
 static eph_t eph[2*MAX_SAT] __attribute__((section("IRAM2")));
 static eph_t REph[MAX_SAT];
-//static eph_t BEph[MAX_SAT];
+static eph_t BEph[MAX_SAT];
 //static alm_t Ralm[MAX_SAT];
 //static alm_t Balm[MAX_SAT];
 //static obsd_t RObsData[MAX_OBS] ;
@@ -37,7 +37,7 @@ void rtksvrstart(rtksvr_t* svr)
 	svr->rtk.sol.result = result;
 		
 	init_raw(svr->raw,REph);
-	init_raw(svr->raw+1,NULL);	
+	init_raw(svr->raw+1,BEph);	
 	
 	svr->ftime = time0;	
 	

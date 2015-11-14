@@ -1,6 +1,8 @@
 #include "main.h"
 #include "rtk.h"
 
+//#define _TEST_RESULT
+
 #define TIMER_FREQ_HZ 5
 
 TIM_HandleTypeDef TimerHandle __attribute__((section("IRAM2")));
@@ -384,7 +386,7 @@ int main()//OPTIMIZATION LEVEL = 0
 
 	while(1)
 	{
-		
+#ifndef _TEST_RESULT		
 		if (flagTimeout)
 		{
 
@@ -489,24 +491,26 @@ int main()//OPTIMIZATION LEVEL = 0
 		}
 		
 
-	
-/*		if (flagTimeout)
+#else	
+		if (flagTimeout)
 		{
+			static int i;
 			char* res = svr.rtk.sol.result;
 			flagTimeout = 0;
 			
 			res+=sprintf(res,
-			"%04.0f/%02.0f/%02.0f %02.0f:%02.0f:%06.3f %14.9f %14.9f %10.4f %3d %3d %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %6.2f %6.1f",
+		"%04.0f/%02.0f/%02.0f %02.0f:%02.0f:%06.3f %14.4f %14.4f %14.4f %3d %3d %8.4f %8.4f %8.4f %8.4f %8.4f %8.4f %6.2f %6.1f",
 			2015.0,10.0,12.0,3.0,45.0,18.0,//time yy/mm/dd hh:mm:ss.ssss
-			1.0*R2D,1.0*R2D,1.0,
+			1.0,2.0,1.0,
 			1,1,
 			1.0,1.0,1.0,
 			1.0,1.0,1.0,
 			1.0,1.0);
+			res+=sprintf(res," %4d",i++);
 			res[0]='\n';
 			SendStr(svr.rtk.sol.result);
 		}
-*/		
+#endif		
 	}
 	
 }
